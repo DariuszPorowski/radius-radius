@@ -149,6 +149,7 @@ case "${CURRENT_SHELL}" in
   zsh)
     if [[ -f ~/.zshrc ]]; then
       log "Reloading ~/.zshrc"
+      unset ZSH_VERSION
       # shellcheck disable=SC1090
       source ~/.zshrc
     fi
