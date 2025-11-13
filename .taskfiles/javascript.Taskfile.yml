@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install Prettier
+  install:prettier:
+    desc: Install Prettier
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "prettier@{{.VERSION.prettier}}"
+      - task: :internal:install:npm
+        vars:
+          APP: prettier-plugin-multiline-arrays
+          OPTS: "--no-save"
+
+  # * Tools
+  tools:
+    desc: Install JavaScript tools
+    vars:
+      ITEMS:
+        - prettier
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Lint
+  lint:check:
+    desc: Lint JavaScript/TypeScript/JSON files
+    preconditions:
+      - sh: task internal:command -- prettier
+        msg: "prettier is not installed. Please install it by running: task js:install:prettier"
+    sources:
+      - "**/*.js"
+      - "**/*.cjs"
+      - "**/*.mjs"
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.jsx"
+      - "**/*.json"
+      - "**/*.jsonc"
+    cmds:
+      - defer: echo '{{if .EXIT_CODE}}⚠️ JavaScript/TypeScript/JSON files are not formatted correctly. Please run 'task js:lint:fix' to fix formatting issues.{{end}}'
+      - cmd: prettier --config .github/linters/.prettierrc.yml --check "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
+    dir: "{{.ROOT_DIR}}"
+
+  lint:fix:
+    desc: Lint JavaScript files
+    aliases:
+      - lint
+    preconditions:
+      - sh: task internal:command -- prettier
+        msg: "prettier is not installed. Please install it by running: task js:install:prettier"
+    sources:
+      - "**/*.js"
+      - "**/*.cjs"
+      - "**/*.mjs"
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.jsx"
+      - "**/*.json"
+      - "**/*.jsonc"
+    cmds:
+      - prettier --config ./.github/linters/.prettierrc.yml --write "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
+    dir: "{{.ROOT_DIR}}"

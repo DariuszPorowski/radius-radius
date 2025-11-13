@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+---
+name: Hello Task
+
+on:
+  push:
+    branches:
+      - dp/dx-task
+  pull_request:
+
+permissions: {}
+
+jobs:
+  sequence:
+    name: 🔍 Lint
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: 🩺 Debug
+        uses: raven-actions/debug@9dbdeb7eea607a7d73411895c65987e71d59a466 # v1.2.0
+
+      - name: ⤵️ Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: 🚧 Setup Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version-file: .node-version
+
+      - name: 🚧 Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: 🚧 Setup Task
+        uses: go-task/setup-task@0ab1b2a65bc55236a3bc64cde78f80e20e8885c2 # v1.0.0
+        with:
+          repo-token: ${{ github.token }}
+
+      - name: 🔨 Setup tools
+        run: task js:tools
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # Check only, fail the job if issues found
+      - name: ✔️ Run lint check
+        continue-on-error: true # only for demo purposes
+        run: task js:lint:check
+
+      - name: 🔨 Setup tools
+        run: task sh:tools
+        # continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # Fix
+      - name: ✔️ Run lint fix
+        continue-on-error: true # only for demo purposes
+        run: task sh:lint
+
+      # Check for differences after fix, fail the job if differences found
+      - name: 🔀 Check for differences
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: task diff -- "sh:lint:fix"
+
+  parallel:
+    name: 🔍 Lint
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - js
+          - sh
+          - md
+          - yml
+          - gh
+    steps:
+      - name: 🩺 Debug
+        uses: raven-actions/debug@9dbdeb7eea607a7d73411895c65987e71d59a466 # v1.2.0
+
+      - name: ⤵️ Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: 🚧 Setup Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version-file: .node-version
+
+      - name: 🚧 Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: 🚧 Setup Task
+        uses: go-task/setup-task@0ab1b2a65bc55236a3bc64cde78f80e20e8885c2 # v1.0.0
+        with:
+          repo-token: ${{ github.token }}
+
+      - name: 🚧 Setup runtime (UV)
+        run: task runtime:setup:uv
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: 🔨 Setup tools
+        run: task ${{ matrix.task }}:tools
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: ✔️ Run lint (${{ matrix.task }})
+        run: task ${{ matrix.task }}:lint
+
+      - name: 🔀 Check for differences
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: task diff -- "${{ matrix.task }}:lint:fix"

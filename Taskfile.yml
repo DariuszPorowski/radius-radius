@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+#
+# --- Windows ---
+# winget install Task.Task
+#
+# --- Linux ---
+# sh -c "$(curl -fsSL https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+# echo 'command -v task >/dev/null || export PATH="$PATH:$HOME/.local/bin"' >> ~/.profile
+# source ~/.profile
+#
+# --- macOS ---
+# brew install go-task/tap/go-task
+---
+version: "3"
+
+set: [pipefail]
+shopt: [globstar]
+
+dotenv: [".env", ".{{.ENV}}/.env", "{{.ENV}}/.env"]
+
+vars:
+  REPO_ABS_ROOT_PATH:
+    sh: git rev-parse --show-toplevel
+  CURRENT_BRANCH:
+    sh: git rev-parse --abbrev-ref HEAD
+
+includes:
+  internal: .taskfiles/_internal.Taskfile.yml
+  runtime: .taskfiles/runtime.Taskfile.yml
+  api: .taskfiles/api.Taskfile.yml
+  sh: .taskfiles/shell.Taskfile.yml
+  gh: .taskfiles/github.Taskfile.yml
+  go: .taskfiles/golang.Taskfile.yml
+  js: .taskfiles/javascript.Taskfile.yml
+  md: .taskfiles/markdown.Taskfile.yml
+  # sec: .taskfiles/security.Taskfile.yml
+  spell: .taskfiles/spell.Taskfile.yml
+  tf: .taskfiles/terraform.Taskfile.yml
+  yml: .taskfiles/yaml.Taskfile.yml
+  # site: .taskfiles/site.Taskfile.yml
+  # project: .taskfiles/project.Taskfile.yml
+  k8s: .taskfiles/kubernetes.Taskfile.yml
+  utils: .taskfiles/utils.Taskfile.yml
+tasks:
+  default:
+    desc: List available tasks
+    silent: true
+    cmds:
+      - task --list
+
+  sysinfo:
+    desc: Display system information
+    silent: true
+    cmds:
+      - 'echo "OS: {{OS}}"' # windows, linux, darwin
+      - 'echo "Architecture: {{ARCH}}"' # amd64, arm64, etc.
+      - 'echo "CPU cores: {{numCPU}}"' # Number of CPU cores
+      - cmd: 'echo -e "Tool versions:\n" && echo "{{.VERSION | toYaml}}"'
+
+  init:
+    desc: List available tasks
+    silent: true
+    cmds:
+      - task: runtime:setup
+      - fnm install
+      - fnm use
+      - node --version
+      - uv python install --default "$(cat .python-version)" --preview-features python-install-default
+      - python --version
+      # - task: tools
+    dir: "{{.ROOT_DIR}}"
+
+  tools:
+    desc: Install tools
+    vars:
+      ITEMS:
+        - api
+        - sh
+        - gh
+        - go
+        - js
+        - md
+        # - sec
+        - spell
+        - tf
+        - yml
+        # - site
+        - k8s
+        - utils
+    cmds:
+      - for: { var: ITEMS }
+        task: "{{.ITEM}}:tools"
+
+  lint:
+    desc: Lint files
+    vars:
+      ITEMS:
+        - api
+        - sh
+        - gh
+        - js
+        - md
+        # - sec
+        - spell
+        - tf
+        - yml
+    deps:
+      - for: { var: ITEMS }
+        task: "{{.ITEM}}:lint"
+
+  diff:
+    desc: Check for differences
+    silent: true
+    status:
+      - git diff --shortstat --exit-code
+    cmds:
+      - cmd: |
+          echo "⚠️⚠️⚠️ Unexpected difference. Run 'task {{.CLI_ARGS}}' command and commit. ⚠️⚠️⚠️"
+          echo
+          echo "🛑🛑🛑 Uncommitted changes 🛑🛑🛑"
+          echo
+          git status --short
+          echo
+          echo "📝📝📝 Summary 📝📝📝"
+          echo
+          git diff --compact-summary
+          echo
+          echo "🔁🔁🔁 Differences 🔁🔁🔁"
+          echo
+          git --no-pager diff
+          echo
+          exit 1

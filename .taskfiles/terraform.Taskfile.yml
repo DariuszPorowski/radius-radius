@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install Terraform
+  install:terraform:
+    desc: Install Terraform
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: HashiCorp.Terraform
+          VERSION: "{{.VERSION.terraform}}"
+      - task: :internal:install:brew:tap
+        vars:
+          APP: hashicorp/tap
+      - task: :internal:install:brew
+        vars:
+          APP: "hashicorp/tap/terraform@{{.VERSION.terraform}}"
+      - cmd: |
+          sudo ./.taskfiles/scripts/install_terraform.sh "{{.VERSION.terraform}}"
+        platforms: [linux]
+
+  # * Install OpenTofu
+  install:opentofu:
+    desc: Install OpenTofu
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: OpenTofu.Tofu
+          VERSION: "{{.VERSION.opentofu}}"
+      - task: :internal:install:brew
+        vars:
+          APP: "opentofu@{{.VERSION.opentofu}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_opentofu.sh "{{.VERSION.opentofu}}"
+        platforms: [linux]
+
+  # * Tools
+  tools:
+    desc: Install Terraform tools
+    vars:
+      ITEMS:
+        - terraform
+        - opentofu
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}

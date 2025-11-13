@@ -1,0 +1,172 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+vars:
+  PWSH: pwsh -NonInteractive -NoProfile -NoLogo -Command
+  PWSH_SCRIPT: pwsh -NonInteractive -NoProfile -NoLogo -File
+  APT_UPDATE: sudo apt-get -o DPkg::Lock::Timeout=-1 update
+  APT_INSTALL: sudo apt-get -o DPkg::Lock::Timeout=-1 install -y
+  VERSION:
+    map:
+      # Runtime
+      uv: latest
+      fnm: latest
+      pwsh: latest
+      golang: latest
+      # API
+      autorest: 3.7.2
+      oav: latest
+      typespec: latest
+      # GitHub
+      actionlint: latest
+      act: latest
+      pinact: latest
+      ghalint: latest
+      gh: latest
+      # GoLang
+      dlv: latest
+      deadcode: latest
+      golangciLint: latest
+      gotestsum: latest
+      govulncheck: latest
+      goimports: latest
+      gofumpt: latest
+      goTestCoverage: latest
+      gocoverCobertura: latest
+      mockgen: v0.4.0
+      controllerGen: v0.17.0
+      # JavaScript/TypeScript
+      prettier: latest
+      # Kubernetes
+      kubectl: latest
+      helm: latest
+      kind: latest
+      k3d: latest
+      envtest: release-0.22
+      # Markdown
+      markdownlintCli2: latest
+      markdownTableFormatter: latest
+      # Shell
+      shellcheck: latest
+      shfmt: latest
+      # Spell
+      cspell: latest
+      codespell: latest
+      lychee: latest
+      # Utils
+      dapr: latest
+      oras: latest
+      jq: latest
+      terraform: latest
+      opentofu: latest
+      bicep: latest
+      azd: latest
+      az: latest
+      mise: latest
+      stern: latest
+      # YAML
+      yamllint: latest
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+
+tasks:
+  command:
+    desc: Check if command exists (internal)
+    silent: true
+    run: once
+    preconditions:
+      - sh: |
+          {{empty .CLI_ARGS | not}}
+        msg: No command provided. Please provide a command to check.
+    cmds:
+      - cmd: command -v "{{.CLI_ARGS}}"
+        platforms: [linux, darwin]
+      - cmd: |
+          {{.PWSH}} 'Get-Command "{{.CLI_ARGS}}"'
+        platforms: [windows]
+
+  install:go:
+    desc: go install
+    internal: true
+    preconditions:
+      - sh: task internal:command -- go
+        msg: "go is not installed. Please install go: https://go.dev/doc/install"
+    requires:
+      vars: [APP]
+    cmds:
+      - go install {{.APP}}
+
+  install:winget:
+    desc: winget install
+    internal: true
+    preconditions:
+      - sh: task internal:command -- winget
+        msg: "winget is not installed. Please install winget: https://learn.microsoft.com/windows/package-manager/winget/"
+    requires:
+      vars: [APP]
+    vars:
+      VERSION: '{{if and .VERSION (ne .VERSION "latest")}}--version {{.VERSION}}{{end}}'
+    cmds:
+      - winget install --id "{{.APP}}" --exact --accept-source-agreements --accept-package-agreements --disable-interactivity {{.VERSION}}
+    ignore_error: true
+    platforms: [windows]
+
+  install:brew:
+    desc: brew install
+    internal: true
+    preconditions:
+      - sh: task internal:command -- brew
+        msg: "brew is not installed. Please install brew."
+    requires:
+      vars: [APP]
+    cmds:
+      - brew install {{.APP}}
+    platforms: [darwin]
+
+  install:brew:tap:
+    desc: brew tap
+    internal: true
+    preconditions:
+      - sh: task internal:command -- brew
+        msg: "brew is not installed. Please install brew."
+    requires:
+      vars: [APP]
+    cmds:
+      - brew tap {{.APP}}
+    platforms: [darwin]
+
+  install:pipx:
+    desc: pipx install
+    internal: true
+    preconditions:
+      - sh: task internal:command -- pipx
+        msg: "pipx is not installed. Please install pipx: https://pipx.pypa.io/"
+    requires:
+      vars: [APP]
+    cmds:
+      - pipx install --include-deps {{.APP}}
+
+  install:npm:
+    desc: npm install
+    internal: true
+    preconditions:
+      - sh: task internal:command -- npm
+        msg: "npm is not installed. Please install npm: https://docs.npmjs.com/cli/commands/npm"
+    requires:
+      vars: [APP]
+    cmds:
+      - npm install {{if .OPTS}}{{.OPTS}}{{else}}--global{{end}} {{.APP}}
+
+  install:uv:
+    desc: uv install
+    internal: true
+    preconditions:
+      - sh: task internal:command -- uv
+        msg: "uv is not installed. Please install uv by running: `task runtime:setup:uv`"
+    requires:
+      vars: [APP]
+    cmds:
+      - uv tool install --force --upgrade {{.APP}}

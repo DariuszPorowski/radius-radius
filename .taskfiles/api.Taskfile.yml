@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install Autorest
+  install:autorest:
+    desc: Install Autorest
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "autorest@{{.VERSION.autorest}}"
+
+  # * Install OAV
+  install:oav:
+    desc: Install OAV
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "oav@{{.VERSION.oav}}"
+
+  # * Install TypeSpec
+  install:typespec:
+    desc: Install TypeSpec
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "@typespec/compiler@{{.VERSION.typespec}}"
+
+  # * Tools
+  tools:
+    desc: Install API tools
+    vars:
+      ITEMS:
+        - autorest
+        - oav
+        - typespec
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Lint
+  lint:
+    desc: Lint API files
+    preconditions:
+      - sh: task internal:command -- tsp
+        msg: "tsp is not installed. Please install it by running: task api:install:typespec"
+    sources:
+      - "**/*.tsp"
+    cmds:
+      - tsp format "**/*.tsp"
+    dir: "{{.ROOT_DIR}}"

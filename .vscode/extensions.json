@@ -1,7 +1,31 @@
 {
   "recommendations": [
-    "ms-azuretools.vscode-bicep",
+    "redhat.vscode-yaml",
     "golang.go",
-    "GitHub.vscode-pull-request-github"
+    "ms-azuretools.vscode-bicep",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "ms-vscode.powershell",
+    "ms-vscode.makefile-tools",
+    "timonwong.shellcheck",
+    "typespec.typespec-vscode",
+    "task.vscode-task",
+    "esbenp.prettier-vscode",
+    "ms-vscode.azurecli",
+    "fnando.linter",
+    "hashicorp.terraform",
+    "edwinhuish.better-comments-next",
+    "ms-azuretools.vscode-azure-github-copilot",
+    "ms-azuretools.vscode-docker",
+    "editorconfig.editorconfig",
+    "davidanson.vscode-markdownlint",
+    "github.copilot",
+    "github.copilot-chat",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+    "github.codespaces",
+    "github.remotehub",
+    "bierner.github-markdown-preview",
+    "usernamehw.errorlens",
+    "lumirelle.shell-format-rev"
   ]
 }

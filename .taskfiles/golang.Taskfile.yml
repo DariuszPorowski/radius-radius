@@ -1,0 +1,135 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install Dlv
+  install:dlv:
+    desc: Install Dlv
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "github.com/go-delve/delve/cmd/dlv@{{.VERSION.dlv}}"
+
+  # * Install DeadCode
+  install:deadcode:
+    desc: Install DeadCode
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "golang.org/x/tools/cmd/deadcode@{{.VERSION.deadcode}}"
+
+  # * Install GolangCI-Lint
+  install:golangci-lint:
+    desc: Install GolangCI-Lint
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: GolangCI.golangci-lint
+          VERSION: "{{.VERSION.golangciLint}}"
+      - task: :internal:install:brew
+        vars:
+          APP: "golangci-lint@{{.VERSION.golangciLint}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_golangci-lint.sh "{{.VERSION.golangciLint}}"
+        platforms: [linux]
+
+  # * Install GoTestSum
+  install:gotestsum:
+    desc: Install GoTestSum
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "gotest.tools/gotestsum@{{.VERSION.gotestsum}}"
+
+  # * Install GoVulnCheck
+  install:govulncheck:
+    desc: Install GoVulnCheck
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "golang.org/x/vuln/cmd/govulncheck@{{.VERSION.govulncheck}}"
+
+  # * Install GoImports
+  install:goimports:
+    desc: Install GoImports
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "golang.org/x/tools/cmd/goimports@{{.VERSION.goimports}}"
+
+  # * Install GoFumpt
+  install:gofumpt:
+    desc: Install GoFumpt
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "mvdan.cc/gofumpt@{{.VERSION.gofumpt}}"
+
+  # * Install Go Test Coverage
+  install:go-test-coverage:
+    desc: Install Go Test Coverage
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "github.com/vladopajic/go-test-coverage/v2@{{.VERSION.goTestCoverage}}"
+
+  # * Install GoCover-Cobertura
+  install:gocover-cobertura:
+    desc: Install GoCover-Cobertura
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "github.com/boumenot/gocover-cobertura@{{.VERSION.gocoverCobertura}}"
+
+  # * Install MockGen
+  install:mockgen:
+    desc: Install MockGen
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "go.uber.org/mock/mockgen@{{.VERSION.mockgen}}"
+
+  # * Install Controller-Gen
+  install:controller-gen:
+    desc: Install Controller-Gen
+    cmds:
+      - task: :internal:install:go
+        vars:
+          APP: "sigs.k8s.io/controller-tools/cmd/controller-gen@{{.VERSION.controllerGen}}"
+
+  # * Tools
+  tools:
+    desc: Install Go tools
+    vars:
+      ITEMS:
+        - dlv
+        - deadcode
+        - golangci-lint
+        - gotestsum
+        - govulncheck
+        - goimports
+        - gofumpt
+        - go-test-coverage
+        - gocover-cobertura
+        - mockgen
+        - controller-gen
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Lint
+  lint:
+    desc: Lint Go files
+    preconditions:
+      - sh: task internal:command -- golangci-lint
+        msg: "golangci-lint is not installed. Please install it by running: task go:install:golangci-lint"
+    sources:
+      - "**/*.go"
+      - "**/*.mod"
+      - "**/*.sum"
+      - "**/go.work"
+    cmds:
+      - golangci-lint run --fix
+    dir: "{{.ROOT_DIR}}"

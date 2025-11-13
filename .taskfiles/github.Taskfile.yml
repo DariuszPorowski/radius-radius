@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install Actionlint
+  install:actionlint:
+    desc: Install Actionlint
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: rhysd.actionlint
+          VERSION: "{{.VERSION.actionlint}}"
+      - task: :internal:install:brew
+        vars:
+          APP: "actionlint@{{.VERSION.actionlint}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_actionlint.sh "{{.VERSION.actionlint}}"
+        platforms: [linux]
+
+  # * Install ACT
+  install:act:
+    desc: Install ACT
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: nektos.act
+          VERSION: "{{.VERSION.act}}"
+      - task: :internal:install:brew
+        vars:
+          APP: "act@{{.VERSION.act}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_act.sh "{{.VERSION.act}}"
+        platforms: [linux]
+
+  # * Install PinAct
+  install:pinact:
+    desc: Install PinAct
+    summary: Install a pinned version of Act
+    cmds:
+      - cmd: |
+          echo TODO
+        platforms: [windows]
+      - task: :internal:install:brew
+        vars:
+          APP: "pinact@{{.VERSION.pinact}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_pinact.sh "{{.VERSION.pinact}}"
+        platforms: [linux]
+
+  # * Install GHAlint
+  install:ghalint:
+    desc: Install GHAlint
+    cmds:
+      - cmd: |
+          echo TODO
+        platforms: [windows]
+      - task: :internal:install:brew
+        vars:
+          APP: "ghalint@{{.VERSION.ghalint}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_ghalint.sh "{{.VERSION.ghalint}}"
+        platforms: [linux]
+
+  # * Install GitHub CLI
+  install:gh:
+    desc: Install GitHub CLI
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: GitHub.cli
+          VERSION: "{{.VERSION.gh}}"
+      - task: :internal:install:brew
+        vars:
+          APP: "gh@{{.VERSION.gh}}"
+      - cmd: |
+          sudo ./.taskfiles/scripts/install_gh.sh "{{.VERSION.gh}}"
+        platforms: [linux]
+
+  # * Tools
+  tools:
+    desc: Install GitHub tools
+    vars:
+      ITEMS:
+        - actionlint
+        - act
+        - gh
+        - pinact
+        - ghalint
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Lint
+  lint:
+    desc: Lint GitHub files
+    preconditions:
+      - sh: task internal:command -- actionlint
+        msg: "actionlint is not installed. Please install it by running: task gh:install:actionlint"
+    sources:
+      - ".github/**/*.yml"
+      - ".github/**/*.yaml"
+    cmds:
+      - actionlint -config-file ./.github/linters/actionlint.yaml
+      - ghalint run
+      - ghalint run-action
+    dir: "{{.ROOT_DIR}}"

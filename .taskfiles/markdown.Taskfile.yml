@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install markdownlint-cli2
+  install:markdownlint-cli2:
+    desc: Install markdownlint-cli2
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "markdownlint-cli2@{{.VERSION.markdownlintCli2}}"
+
+  # * Install markdown-table-formatter
+  install:markdown-table-formatter:
+    desc: Install markdown-table-formatter
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "markdown-table-formatter@{{.VERSION.markdownTableFormatter}}"
+
+  # * Tools
+  tools:
+    desc: Install Markdown tools
+    vars:
+      ITEMS:
+        - markdownlint-cli2
+        - markdown-table-formatter
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Lint
+  lint:
+    desc: Lint Markdown files
+    preconditions:
+      - sh: task internal:command -- markdownlint-cli2
+        msg: "markdownlint-cli2 is not installed. Please install it by running: task md:install:markdownlint-cli2"
+      - sh: task internal:command -- markdown-table-formatter
+        msg: "markdown-table-formatter is not installed. Please install it by running: task md:install:markdown-table-formatter"
+    sources:
+      - "**/*.md"
+    cmds:
+      - markdownlint-cli2 "./**/*.md" --config "./.github/linters/.markdownlint-cli2.yaml" --fix
+      - markdown-table-formatter "./**/*.md"
+    dir: "{{.ROOT_DIR}}"

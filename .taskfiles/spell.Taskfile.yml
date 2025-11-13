@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install CSpell
+  install:cspell:
+    desc: Install CSpell
+    cmds:
+      - task: :internal:install:npm
+        vars:
+          APP: "cspell@{{.VERSION.cspell}}"
+
+  # * Install CodeSpell
+  install:codespell:
+    desc: Install CodeSpell
+    cmds:
+      - task: :internal:install:uv
+        vars:
+          APP: "codespell@{{.VERSION.codespell}}"
+
+  # * Install Lychee
+  install:lychee:
+    desc: Install Lychee
+    cmds:
+      - task: :internal:install:winget
+        vars:
+          APP: lycheeverse.lychee
+          VERSION: "{{.VERSION.lychee}}"
+      - task: :internal:install:brew
+        vars:
+          APP: "lychee@{{.VERSION.lychee}}"
+      - cmd: |
+          ./.taskfiles/scripts/install_lychee.sh "{{.VERSION.lychee}}"
+        platforms: [linux]
+
+  # * Tools
+  tools:
+    desc: Install Spell tools
+    vars:
+      ITEMS:
+        - cspell
+        - codespell
+        - lychee
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Lint
+  lint:
+    desc: Lint Spell files
+    preconditions:
+      - sh: task internal:command -- codespell
+        msg: "codespell is not installed. Please install it by running: task spell:install:codespell"
+      - sh: task internal:command -- cspell
+        msg: "cspell is not installed. Please install it by running: task spell:install:cspell"
+      - sh: task internal:command -- lychee
+        msg: "lychee is not installed. Please install it by running: task spell:install:lychee"
+    cmds:
+      - codespell --config ./.github/linters/.codespellrc --summary --write-changes
+      - cspell --config ./.github/linters/.cspell.yml "./**/*.md"
+      - lychee --config ./.github/linters/.lychee.toml --format markdown .
+    dir: "{{.ROOT_DIR}}"
