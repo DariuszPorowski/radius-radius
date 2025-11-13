@@ -135,24 +135,19 @@ add_to_shell() {
 # Configure both bash and zsh if present
 add_to_shell ~/.bashrc bash
 add_to_shell ~/.zshrc zsh
+add_to_shell ~/.config/fish/config.fish fish
 
 # Detect current shell and reload rc file
 CURRENT_SHELL=$(basename "${SHELL}")
 case "${CURRENT_SHELL}" in
   bash)
-    if [[ -f ~/.bashrc ]]; then
-      log "Reloading ~/.bashrc"
-      # shellcheck disable=SC1090
-      source ~/.bashrc
-    fi
+    eval "$(fnm env --use-on-cd --shell bash)"
     ;;
   zsh)
-    if [[ -f ~/.zshrc ]]; then
-      log "Reloading ~/.zshrc"
-      unset ZSH_VERSION
-      # shellcheck disable=SC1090
-      source ~/.zshrc
-    fi
+    eval "$(fnm env --use-on-cd --shell zsh)"
+    ;;
+  fish)
+    eval "$(fnm env --use-on-cd --shell fish)"
     ;;
   *)
     log "Note: Restart your shell to use fnm (unknown shell: ${CURRENT_SHELL})"
