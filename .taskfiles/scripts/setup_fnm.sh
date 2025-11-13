@@ -136,6 +136,24 @@ add_to_shell() {
 add_to_shell ~/.bashrc bash
 add_to_shell ~/.zshrc zsh
 
-log "Note: Restart your shell to use fnm"
-
-export PATH=$PATH:${INSTALL_DIR}
+# Detect current shell and reload rc file
+CURRENT_SHELL=$(basename "${SHELL}")
+case "${CURRENT_SHELL}" in
+  bash)
+    if [[ -f ~/.bashrc ]]; then
+      log "Reloading ~/.bashrc"
+      # shellcheck disable=SC1090
+      source ~/.bashrc
+    fi
+    ;;
+  zsh)
+    if [[ -f ~/.zshrc ]]; then
+      log "Reloading ~/.zshrc"
+      # shellcheck disable=SC1090
+      source ~/.zshrc
+    fi
+    ;;
+  *)
+    log "Note: Restart your shell to use fnm (unknown shell: ${CURRENT_SHELL})"
+    ;;
+esac
