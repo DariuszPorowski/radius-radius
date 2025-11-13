@@ -137,19 +137,9 @@ add_to_shell ~/.bashrc bash
 add_to_shell ~/.zshrc zsh
 add_to_shell ~/.config/fish/config.fish fish
 
-# Detect current shell and reload rc file
-CURRENT_SHELL=$(basename "${SHELL}")
-case "${CURRENT_SHELL}" in
-  bash)
-    eval "$(fnm env --use-on-cd --shell bash)"
-    ;;
-  zsh)
-    eval "$(fnm env --use-on-cd --shell zsh)"
-    ;;
-  fish)
-    eval "$(fnm env --use-on-cd --shell fish)"
-    ;;
-  *)
-    log "Note: Restart your shell to use fnm (unknown shell: ${CURRENT_SHELL})"
-    ;;
-esac
+# Verify installation
+"${INSTALL_DIR}/${TOOL_NAME}" version || die "Installed binary failed to run"
+
+# Since this script runs in bash, only evaluate fnm env for bash
+log "Setting up environment for current session"
+eval "$(${INSTALL_DIR}/${TOOL_NAME} env --use-on-cd --shell bash)"

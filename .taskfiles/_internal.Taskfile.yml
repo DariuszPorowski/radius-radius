@@ -8,6 +8,12 @@ vars:
   PWSH_SCRIPT: pwsh -NonInteractive -NoProfile -NoLogo -File
   APT_UPDATE: sudo apt-get -o DPkg::Lock::Timeout=-1 update
   APT_INSTALL: sudo apt-get -o DPkg::Lock::Timeout=-1 install -y
+  PYTHON_VERSION:
+    sh: |
+      cat .python-version
+  NODE_VERSION:
+    sh: |
+      cat .node-version
   VERSION:
     map:
       # Runtime

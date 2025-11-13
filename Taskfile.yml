@@ -63,11 +63,11 @@ tasks:
     silent: true
     cmds:
       - task: runtime:setup
-      - fnm install
-      - fnm use
-      - node --version
-      - uv python install --default "$(cat .python-version)" --preview-features python-install-default
-      - python --version
+      # - fnm install {{.NODE_VERSION}}
+      # - fnm use {{.NODE_VERSION}}
+      # - node --version
+      # - uv python install --default "$(cat .python-version)" --preview-features python-install-default
+      # - python --version
       # - task: tools
     dir: "{{.ROOT_DIR}}"
 
