@@ -14,7 +14,7 @@ tasks:
           VERSION: "{{.VERSION.kubectl}}"
       - task: :internal:install:brew
         vars:
-          APP: "kubernetes-cli@{{.VERSION.kubectl}}"
+          APP: kubernetes-cli@{{.VERSION.kubectl}}
       - cmd: |
           # TODO
           {{.APT_UPDATE}} && {{.APT_INSTALL}} apt-transport-https ca-certificates curl gnupg
@@ -22,12 +22,12 @@ tasks:
           sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
           {{.APT_UPDATE}} && {{.APT_INSTALL}} kubectl
         platforms: [linux]
-      # - cmd: |
-      #       # TODO
-      #       curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-      #       chmod +x kubectl
-      #       mkdir -p ~/.local/bin
-      #       mv ./kubectl ~/.local/bin/kubectl
+        # - cmd: |
+        #       # TODO
+        #       curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        #       chmod +x kubectl
+        #       mkdir -p ~/.local/bin
+        #       mv ./kubectl ~/.local/bin/kubectl
 
   # * Install Helm
   install:helm:
@@ -39,7 +39,7 @@ tasks:
           VERSION: "{{.VERSION.helm}}"
       - task: :internal:install:brew
         vars:
-          APP: "kubernetes-helm@{{.VERSION.helm}}"
+          APP: kubernetes-helm@{{.VERSION.helm}}
       - cmd: |
           # TODO
           {{.APT_UPDATE}} && {{.APT_INSTALL}} curl gpg apt-transport-https
@@ -58,7 +58,7 @@ tasks:
           VERSION: "{{.VERSION.kind}}"
       - task: :internal:install:brew
         vars:
-          APP: "kind@{{.VERSION.kind}}"
+          APP: kind@{{.VERSION.kind}}
       - cmd: |
           # TODO
           # For AMD64 / x86_64
@@ -80,7 +80,7 @@ tasks:
           VERSION: "{{.VERSION.k3d}}"
       - task: :internal:install:brew
         vars:
-          APP: "k3d@{{.VERSION.k3d}}"
+          APP: k3d@{{.VERSION.k3d}}
       - cmd: |
           # TODO
           curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | {{if ne .VERSION.k3d "latest"}}TAG="{{.VERSION.k3d}}" {{end}}bash
@@ -92,7 +92,7 @@ tasks:
     cmds:
       - task: :internal:install:go
         vars:
-          APP: "sigs.k8s.io/controller-runtime/tools/setup-envtest@{{.VERSION.envtest}}"
+          APP: sigs.k8s.io/controller-runtime/tools/setup-envtest@{{.VERSION.envtest}}
 
   # * Install Stern
   install:stern:
@@ -104,7 +104,7 @@ tasks:
           VERSION: "{{.VERSION.stern}}"
       - task: :internal:install:brew
         vars:
-          APP: "stern@{{.VERSION.stern}}"
+          APP: stern@{{.VERSION.stern}}
       - cmd: |
           # TODO
           asdf plugin add stern

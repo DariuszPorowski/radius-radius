@@ -114,6 +114,7 @@ tasks:
     requires:
       vars: [APP]
     vars:
+      # yamllint disable-line rule:quoted-strings
       VERSION: '{{if and .VERSION (ne .VERSION "latest")}}--version {{.VERSION}}{{end}}'
     cmds:
       - winget install --id "{{.APP}}" --exact --accept-source-agreements --accept-package-agreements --disable-interactivity {{.VERSION}}
@@ -125,7 +126,7 @@ tasks:
     internal: true
     preconditions:
       - sh: task internal:command -- brew
-        msg: "brew is not installed. Please install brew."
+        msg: brew is not installed. Please install brew.
     requires:
       vars: [APP]
     cmds:
@@ -137,7 +138,7 @@ tasks:
     internal: true
     preconditions:
       - sh: task internal:command -- brew
-        msg: "brew is not installed. Please install brew."
+        msg: brew is not installed. Please install brew.
     requires:
       vars: [APP]
     cmds:

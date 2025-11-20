@@ -10,11 +10,11 @@ tasks:
     cmds:
       - task: :internal:install:npm
         vars:
-          APP: "prettier@{{.VERSION.prettier}}"
+          APP: prettier@{{.VERSION.prettier}}
       - task: :internal:install:npm
         vars:
           APP: prettier-plugin-multiline-arrays
-          OPTS: "--no-save"
+          OPTS: --no-save
 
   # * Tools
   tools:

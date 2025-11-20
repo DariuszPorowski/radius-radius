@@ -14,7 +14,7 @@ tasks:
           VERSION: "{{.VERSION.az}}"
       - task: :internal:install:brew
         vars:
-          APP: "azure-cli@{{.VERSION.az}}"
+          APP: azure-cli@{{.VERSION.az}}
       - cmd: |
           sudo ./.taskfiles/scripts/install_az.sh "{{.VERSION.az}}"
         platforms: [linux]
@@ -33,7 +33,7 @@ tasks:
           APP: azure/azd
       - task: :internal:install:brew
         vars:
-          APP: "azd@{{.VERSION.azd}}"
+          APP: azd@{{.VERSION.azd}}
       - cmd: |
           ./.taskfiles/scripts/install_azd.sh "{{.VERSION.azd}}"
         platforms: [linux]
@@ -51,7 +51,7 @@ tasks:
           APP: azure/bicep
       - task: :internal:install:brew
         vars:
-          APP: "bicep@{{.VERSION.bicep}}"
+          APP: bicep@{{.VERSION.bicep}}
       - cmd: |
           ./.taskfiles/scripts/install_bicep.sh "{{.VERSION.bicep}}"
         platforms: [linux]

@@ -10,7 +10,7 @@ tasks:
     cmds:
       - task: :internal:install:npm
         vars:
-          APP: "cspell@{{.VERSION.cspell}}"
+          APP: cspell@{{.VERSION.cspell}}
 
   # * Install CodeSpell
   install:codespell:
@@ -18,7 +18,7 @@ tasks:
     cmds:
       - task: :internal:install:uv
         vars:
-          APP: "codespell@{{.VERSION.codespell}}"
+          APP: codespell@{{.VERSION.codespell}}
 
   # * Install Lychee
   install:lychee:
@@ -30,7 +30,7 @@ tasks:
           VERSION: "{{.VERSION.lychee}}"
       - task: :internal:install:brew
         vars:
-          APP: "lychee@{{.VERSION.lychee}}"
+          APP: lychee@{{.VERSION.lychee}}
       - cmd: |
           ./.taskfiles/scripts/install_lychee.sh "{{.VERSION.lychee}}"
         platforms: [linux]

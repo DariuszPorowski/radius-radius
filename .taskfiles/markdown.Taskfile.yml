@@ -10,7 +10,7 @@ tasks:
     cmds:
       - task: :internal:install:npm
         vars:
-          APP: "markdownlint-cli2@{{.VERSION.markdownlintCli2}}"
+          APP: markdownlint-cli2@{{.VERSION.markdownlintCli2}}
 
   # * Install markdown-table-formatter
   install:markdown-table-formatter:
@@ -18,7 +18,7 @@ tasks:
     cmds:
       - task: :internal:install:npm
         vars:
-          APP: "markdown-table-formatter@{{.VERSION.markdownTableFormatter}}"
+          APP: markdown-table-formatter@{{.VERSION.markdownTableFormatter}}
 
   # * Tools
   tools:

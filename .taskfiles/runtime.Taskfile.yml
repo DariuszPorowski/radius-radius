@@ -12,7 +12,7 @@ tasks:
         platforms: [linux]
       - task: :internal:install:brew
         vars:
-          APP: "uv@{{.VERSION.uv}}"
+          APP: uv@{{.VERSION.uv}}
       - task: :internal:install:winget
         vars:
           APP: astral-sh.uv
@@ -26,7 +26,7 @@ tasks:
         platforms: [linux]
       - task: :internal:install:brew
         vars:
-          APP: "fnm@{{.VERSION.fnm}}"
+          APP: fnm@{{.VERSION.fnm}}
       - task: :internal:install:winget
         vars:
           APP: Schniz.fnm
@@ -55,7 +55,7 @@ tasks:
         platforms: [linux]
       - task: :internal:install:brew
         vars:
-          APP: "golang@{{.VERSION.golang}}"
+          APP: golang@{{.VERSION.golang}}
       - task: :internal:install:winget
         vars:
           APP: GoLang.Go

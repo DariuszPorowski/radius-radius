@@ -14,7 +14,7 @@ tasks:
           VERSION: "{{.VERSION.dapr}}"
       - task: :internal:install:brew
         vars:
-          APP: "dapr/tap/dapr-cli@{{.VERSION.dapr}}"
+          APP: dapr/tap/dapr-cli@{{.VERSION.dapr}}
       - cmd: |
           ./.taskfiles/scripts/install_dapr.sh "{{.VERSION.dapr}}"
         platforms: [linux]
@@ -29,7 +29,7 @@ tasks:
           VERSION: "{{.VERSION.oras}}"
       - task: :internal:install:brew
         vars:
-          APP: "oras@{{.VERSION.oras}}"
+          APP: oras@{{.VERSION.oras}}
       - cmd: |
           ./.taskfiles/scripts/install_oras.sh "{{.VERSION.oras}}"
         platforms: [linux]
@@ -44,7 +44,7 @@ tasks:
           VERSION: "{{.VERSION.jq}}"
       - task: :internal:install:brew
         vars:
-          APP: "jq@{{.VERSION.jq}}"
+          APP: jq@{{.VERSION.jq}}
       - cmd: |
           echo 1 # TODO
         platforms: [linux]
@@ -59,7 +59,7 @@ tasks:
           VERSION: "{{.VERSION.mise}}"
       - task: :internal:install:brew
         vars:
-          APP: "mise@{{.VERSION.mise}}"
+          APP: mise@{{.VERSION.mise}}
       - cmd: |
           ./.taskfiles/scripts/install_mise.sh "{{.VERSION.mise}}"
         platforms: [linux]

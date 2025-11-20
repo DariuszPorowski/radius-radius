@@ -14,7 +14,7 @@ tasks:
           VERSION: "{{.VERSION.shellcheck}}"
       - task: :internal:install:brew
         vars:
-          APP: "shellcheck@{{.VERSION.shellcheck}}"
+          APP: shellcheck@{{.VERSION.shellcheck}}
       - cmd: |
           ./.taskfiles/scripts/install_shellcheck.sh "{{.VERSION.shellcheck}}"
         platforms: [linux]

@@ -17,7 +17,7 @@ tasks:
           APP: hashicorp/tap
       - task: :internal:install:brew
         vars:
-          APP: "hashicorp/tap/terraform@{{.VERSION.terraform}}"
+          APP: hashicorp/tap/terraform@{{.VERSION.terraform}}
       - cmd: |
           sudo ./.taskfiles/scripts/install_terraform.sh "{{.VERSION.terraform}}"
         platforms: [linux]
@@ -32,7 +32,7 @@ tasks:
           VERSION: "{{.VERSION.opentofu}}"
       - task: :internal:install:brew
         vars:
-          APP: "opentofu@{{.VERSION.opentofu}}"
+          APP: opentofu@{{.VERSION.opentofu}}
       - cmd: |
           ./.taskfiles/scripts/install_opentofu.sh "{{.VERSION.opentofu}}"
         platforms: [linux]

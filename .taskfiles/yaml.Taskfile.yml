@@ -10,7 +10,7 @@ tasks:
     cmds:
       - task: :internal:install:uv
         vars:
-          APP: "yamllint@{{.VERSION.yamllint}}"
+          APP: yamllint@{{.VERSION.yamllint}}
 
   # * Tools
   tools:

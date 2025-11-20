@@ -14,7 +14,7 @@ tasks:
           VERSION: "{{.VERSION.actionlint}}"
       - task: :internal:install:brew
         vars:
-          APP: "actionlint@{{.VERSION.actionlint}}"
+          APP: actionlint@{{.VERSION.actionlint}}
       - cmd: |
           ./.taskfiles/scripts/install_actionlint.sh "{{.VERSION.actionlint}}"
         platforms: [linux]
@@ -29,7 +29,7 @@ tasks:
           VERSION: "{{.VERSION.act}}"
       - task: :internal:install:brew
         vars:
-          APP: "act@{{.VERSION.act}}"
+          APP: act@{{.VERSION.act}}
       - cmd: |
           ./.taskfiles/scripts/install_act.sh "{{.VERSION.act}}"
         platforms: [linux]
@@ -44,7 +44,7 @@ tasks:
         platforms: [windows]
       - task: :internal:install:brew
         vars:
-          APP: "pinact@{{.VERSION.pinact}}"
+          APP: pinact@{{.VERSION.pinact}}
       - cmd: |
           ./.taskfiles/scripts/install_pinact.sh "{{.VERSION.pinact}}"
         platforms: [linux]
@@ -58,7 +58,7 @@ tasks:
         platforms: [windows]
       - task: :internal:install:brew
         vars:
-          APP: "ghalint@{{.VERSION.ghalint}}"
+          APP: ghalint@{{.VERSION.ghalint}}
       - cmd: |
           ./.taskfiles/scripts/install_ghalint.sh "{{.VERSION.ghalint}}"
         platforms: [linux]
@@ -73,7 +73,7 @@ tasks:
           VERSION: "{{.VERSION.gh}}"
       - task: :internal:install:brew
         vars:
-          APP: "gh@{{.VERSION.gh}}"
+          APP: gh@{{.VERSION.gh}}
       - cmd: |
           sudo ./.taskfiles/scripts/install_gh.sh "{{.VERSION.gh}}"
         platforms: [linux]
@@ -99,8 +99,8 @@ tasks:
       - sh: task internal:command -- actionlint
         msg: "actionlint is not installed. Please install it by running: task gh:install:actionlint"
     sources:
-      - ".github/**/*.yml"
-      - ".github/**/*.yaml"
+      - .github/**/*.yml
+      - .github/**/*.yaml
     cmds:
       - actionlint -config-file ./.github/linters/actionlint.yaml
       - ghalint run

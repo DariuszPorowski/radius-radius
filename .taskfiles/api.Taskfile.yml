@@ -10,7 +10,7 @@ tasks:
     cmds:
       - task: :internal:install:npm
         vars:
-          APP: "autorest@{{.VERSION.autorest}}"
+          APP: autorest@{{.VERSION.autorest}}
 
   # * Install OAV
   install:oav:
@@ -18,7 +18,7 @@ tasks:
     cmds:
       - task: :internal:install:npm
         vars:
-          APP: "oav@{{.VERSION.oav}}"
+          APP: oav@{{.VERSION.oav}}
 
   # * Install TypeSpec
   install:typespec:

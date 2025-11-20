@@ -17,7 +17,7 @@ version: "3"
 set: [pipefail]
 shopt: [globstar]
 
-dotenv: [".env", ".{{.ENV}}/.env", "{{.ENV}}/.env"]
+dotenv: [.env, ".{{.ENV}}/.env", "{{.ENV}}/.env"]
 
 vars:
   REPO_ABS_ROOT_PATH:
@@ -53,9 +53,13 @@ tasks:
     desc: Display system information
     silent: true
     cmds:
+      # yamllint disable-line rule:quoted-strings
       - 'echo "OS: {{OS}}"' # windows, linux, darwin
+      # yamllint disable-line rule:quoted-strings
       - 'echo "Architecture: {{ARCH}}"' # amd64, arm64, etc.
+      # yamllint disable-line rule:quoted-strings
       - 'echo "CPU cores: {{numCPU}}"' # Number of CPU cores
+      # yamllint disable-line rule:quoted-strings
       - cmd: 'echo -e "Tool versions:\n" && echo "{{.VERSION | toYaml}}"'
 
   init:
