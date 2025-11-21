@@ -31,14 +31,24 @@ tasks:
       - for: { var: ITEMS }
         task: install:{{.ITEM}}
 
-  # * Lint
-  lint:
-    desc: Lint Markdown files
+  # * Run markdownlint-cli2
+  run:markdownlint-cli2:
+    desc: Run markdownlint-cli2
     preconditions:
       - sh: task internal:command -- markdownlint-cli2
         msg: "❌ Error: markdownlint-cli2 is not installed. Please run 'task md:install:markdownlint-cli2'"
       - sh: task internal:command:version -- "markdownlint-cli2 --version" "{{.VERSION.markdownlintCli2}}"
         msg: "❌ Version Mismatch: You are not using {{.VERSION.markdownlintCli2}} version. Please run 'task md:install:markdownlint-cli2'"
+    sources:
+      - "**/*.md"
+    cmds:
+      - markdownlint-cli2 "./**/*.md" --config "./.github/linters/.markdownlint-cli2.yaml" --fix
+    dir: "{{.ROOT_DIR}}"
+
+  # * Run markdown-table-formatter
+  run:markdown-table-formatter:
+    desc: Run markdown-table-formatter
+    preconditions:
       - sh: task internal:command -- markdown-table-formatter
         msg: "❌ Error: markdown-table-formatter is not installed. Please run 'task md:install:markdown-table-formatter'"
       - sh: task internal:command:version -- "markdown-table-formatter --version" "{{.VERSION.markdownTableFormatter}}"
@@ -46,6 +56,12 @@ tasks:
     sources:
       - "**/*.md"
     cmds:
-      - markdownlint-cli2 "./**/*.md" --config "./.github/linters/.markdownlint-cli2.yaml" --fix
       - markdown-table-formatter "./**/*.md"
     dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:
+    desc: Lint Markdown files
+    cmds:
+      - task: run:markdownlint-cli2
+      - task: run:markdown-table-formatter

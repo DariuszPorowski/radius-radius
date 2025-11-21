@@ -119,9 +119,9 @@ tasks:
       - for: { var: ITEMS }
         task: install:{{.ITEM}}
 
-  # * Lint
-  lint:
-    desc: Lint Go files
+  # * Run GolangCI-Lint
+  run:golangci-lint:
+    desc: Run GolangCI-Lint
     preconditions:
       - sh: task internal:command -- golangci-lint
         msg: "❌ Error: golangci-lint is not installed. Please run 'task go:install:golangci-lint'"
@@ -135,3 +135,9 @@ tasks:
     cmds:
       - golangci-lint run --fix
     dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:
+    desc: Lint Go files
+    cmds:
+      - task: run:golangci-lint

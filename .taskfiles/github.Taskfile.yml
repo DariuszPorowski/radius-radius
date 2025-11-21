@@ -170,5 +170,6 @@ tasks:
   lint:
     desc: Lint YAML files
     cmds:
+      - task: run:pinact:fix
       - task: run:actionlint
       - task: run:ghalint

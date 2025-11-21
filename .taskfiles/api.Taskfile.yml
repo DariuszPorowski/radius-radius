@@ -40,9 +40,9 @@ tasks:
       - for: { var: ITEMS }
         task: install:{{.ITEM}}
 
-  # * Lint
-  lint:
-    desc: Lint API files
+  # * Run TypeSpec Format
+  run:tsp:format:
+    desc: Run TypeSpec Format
     preconditions:
       - sh: task internal:command -- tsp
         msg: "❌ Error: tsp is not installed. Please run 'task api:install:typespec'"
@@ -53,3 +53,9 @@ tasks:
     cmds:
       - tsp format "**/*.tsp"
     dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:
+    desc: Lint API files
+    cmds:
+      - task: run:tsp:format
