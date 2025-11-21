@@ -27,9 +27,9 @@ tasks:
     desc: Run YAMLlint
     preconditions:
       - sh: task internal:command -- yamllint
-        msg: "Error: yamllint is not installed. Please run 'task yml:install:yamllint'"
+        msg: "❌ Error: yamllint is not installed. Please run 'task yml:install:yamllint'"
       - sh: task internal:command:version -- "yamllint --version" "{{.VERSION.yamllint}}"
-        msg: "Version Mismatch: You are not using {{.VERSION.yamllint}} version. Please run 'task yml:install:yamllint'"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.yamllint}} version. Please run 'task yml:install:yamllint'"
     sources:
       - "**/*.yml"
       - "**/*.yaml"

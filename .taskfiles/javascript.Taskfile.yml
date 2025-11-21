@@ -32,9 +32,9 @@ tasks:
     desc: Run Prettier
     preconditions:
       - sh: task internal:command -- prettier
-        msg: prettier is not installed. Please run 'task js:install:prettier'
+        msg: "❌ Error: prettier is not installed. Please run 'task js:install:prettier'"
       - sh: task internal:command:version -- "prettier --version" "{{.VERSION.prettier}}"
-        msg: "Version Mismatch: You are not using {{.VERSION.prettier}} version. Please run 'task js:install:prettier'"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.prettier}} version. Please run 'task js:install:prettier'"
     sources:
       - "**/*.js"
       - "**/*.cjs"
