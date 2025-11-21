@@ -45,7 +45,7 @@ tasks:
     desc: Lint API files
     preconditions:
       - sh: task internal:command -- tsp
-        msg: "tsp is not installed. Please install it by running: task api:install:typespec"
+        msg: "Error: tsp is not installed. Please run 'task api:install:typespec'"
     sources:
       - "**/*.tsp"
     cmds:

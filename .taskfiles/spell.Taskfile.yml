@@ -52,11 +52,11 @@ tasks:
     desc: Lint Spell files
     preconditions:
       - sh: task internal:command -- codespell
-        msg: "codespell is not installed. Please install it by running: task spell:install:codespell"
+        msg: "Error: codespell is not installed. Please run 'task spell:install:codespell'"
       - sh: task internal:command -- cspell
-        msg: "cspell is not installed. Please install it by running: task spell:install:cspell"
+        msg: "Error: cspell is not installed. Please run 'task spell:install:cspell'"
       - sh: task internal:command -- lychee
-        msg: "lychee is not installed. Please install it by running: task spell:install:lychee"
+        msg: "Error: lychee is not installed. Please run 'task spell:install:lychee'"
     cmds:
       - codespell --config ./.github/linters/.codespellrc --summary --write-changes
       - cspell --config ./.github/linters/.cspell.yml "./**/*.md"

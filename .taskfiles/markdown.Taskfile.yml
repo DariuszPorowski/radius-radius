@@ -36,9 +36,9 @@ tasks:
     desc: Lint Markdown files
     preconditions:
       - sh: task internal:command -- markdownlint-cli2
-        msg: "markdownlint-cli2 is not installed. Please install it by running: task md:install:markdownlint-cli2"
+        msg: "Error: markdownlint-cli2 is not installed. Please run 'task md:install:markdownlint-cli2'"
       - sh: task internal:command -- markdown-table-formatter
-        msg: "markdown-table-formatter is not installed. Please install it by running: task md:install:markdown-table-formatter"
+        msg: "Error: markdown-table-formatter is not installed. Please run 'task md:install:markdown-table-formatter'"
     sources:
       - "**/*.md"
     cmds:

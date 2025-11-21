@@ -22,15 +22,23 @@ tasks:
       - for: { var: ITEMS }
         task: install:{{.ITEM}}
 
-  # * Lint
-  lint:
-    desc: Lint YAML files
+  # * Run YAMLlint
+  run:yamllint:
+    desc: Run YAMLlint
     preconditions:
       - sh: task internal:command -- yamllint
-        msg: "yamllint is not installed. Please install it by running: task yaml:install:yamllint"
+        msg: "Error: yamllint is not installed. Please run 'task yml:install:yamllint'"
+      - sh: task internal:command:version -- "yamllint --version" "{{.VERSION.yamllint}}"
+        msg: "Version Mismatch: You are not using {{.VERSION.yamllint}} version. Please run 'task yml:install:yamllint'"
     sources:
       - "**/*.yml"
       - "**/*.yaml"
     cmds:
       - yamllint --config-file ./.github/linters/.yamllint.yml --format auto --strict .
     dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:
+    desc: Lint YAML files
+    cmds:
+      - task: run:yamllint

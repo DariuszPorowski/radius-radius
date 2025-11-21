@@ -47,9 +47,9 @@ tasks:
     desc: Lint Shell files
     preconditions:
       - sh: task internal:command -- shfmt
-        msg: "shfmt is not installed. Please install it by running: task sh:install:shfmt"
+        msg: "Error: shfmt is not installed. Please run 'task sh:install:shfmt"
       - sh: task internal:command -- shellcheck
-        msg: "shellcheck is not installed. Please install it by running: task sh:install:shellcheck"
+        msg: "Error: shellcheck is not installed. Please run 'task sh:install:shellcheck"
     vars:
       SHELL_FILES:
         sh: |

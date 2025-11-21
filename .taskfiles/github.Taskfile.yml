@@ -97,7 +97,7 @@ tasks:
     desc: Lint GitHub files
     preconditions:
       - sh: task internal:command -- actionlint
-        msg: "actionlint is not installed. Please install it by running: task gh:install:actionlint"
+        msg: "Error: actionlint is not installed. Please run 'task gh:install:actionlint'"
     sources:
       - .github/**/*.yml
       - .github/**/*.yaml

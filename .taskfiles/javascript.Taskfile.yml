@@ -26,12 +26,14 @@ tasks:
       - for: { var: ITEMS }
         task: install:{{.ITEM}}
 
-  # * Lint
-  lint:check:
-    desc: Lint JavaScript/TypeScript/JSON files
+  # * Run Prettier Check
+  run:prettier:check:
+    desc: Run Prettier Check
     preconditions:
       - sh: task internal:command -- prettier
-        msg: "prettier is not installed. Please install it by running: task js:install:prettier"
+        msg: prettier is not installed. Please run 'task js:install:prettier'
+      - sh: task internal:command:version -- "prettier --version" "{{.VERSION.prettier}}"
+        msg: "Version Mismatch: You are not using {{.VERSION.prettier}} version. Please run 'task js:install:prettier'"
     sources:
       - "**/*.js"
       - "**/*.cjs"
@@ -46,13 +48,16 @@ tasks:
       - cmd: prettier --config .github/linters/.prettierrc.yml --check "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
     dir: "{{.ROOT_DIR}}"
 
-  lint:fix:
-    desc: Lint JavaScript files
+  # * Run Prettier Fix
+  run:prettier:fix:
+    desc: Run Prettier fix
     aliases:
       - lint
     preconditions:
       - sh: task internal:command -- prettier
-        msg: "prettier is not installed. Please install it by running: task js:install:prettier"
+        msg: prettier is not installed. Please run 'task js:install:prettier'
+      - sh: task internal:command:version -- "prettier --version" "{{.VERSION.prettier}}"
+        msg: "Version Mismatch: You are not using {{.VERSION.prettier}} version. Please run 'task js:install:prettier'"
     sources:
       - "**/*.js"
       - "**/*.cjs"
@@ -64,4 +69,11 @@ tasks:
       - "**/*.jsonc"
     cmds:
       - prettier --config ./.github/linters/.prettierrc.yml --write "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
+    dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:check:
+    desc: Lint JavaScript/TypeScript/JSON files
+    cmds:
+      - task: run:prettier:check
     dir: "{{.ROOT_DIR}}"

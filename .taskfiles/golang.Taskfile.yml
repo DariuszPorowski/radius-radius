@@ -124,7 +124,7 @@ tasks:
     desc: Lint Go files
     preconditions:
       - sh: task internal:command -- golangci-lint
-        msg: "golangci-lint is not installed. Please install it by running: task go:install:golangci-lint"
+        msg: "Error: golangci-lint is not installed. Please run 'task go:install:golangci-lint'"
     sources:
       - "**/*.go"
       - "**/*.mod"
