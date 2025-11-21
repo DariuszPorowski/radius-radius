@@ -16,7 +16,7 @@ tasks:
   install:codespell:
     desc: Install CodeSpell
     cmds:
-      - task: :internal:install:uv
+      - task: :internal:_install:uv
         vars:
           APP: codespell@{{.VERSION.codespell}}
 

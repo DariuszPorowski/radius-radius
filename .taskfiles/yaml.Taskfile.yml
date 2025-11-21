@@ -8,7 +8,7 @@ tasks:
   install:yamllint:
     desc: Install YAMLlint
     cmds:
-      - task: :internal:install:uv
+      - task: :internal:_install:uv
         vars:
           APP: yamllint@{{.VERSION.yamllint}}
 
