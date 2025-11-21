@@ -24,11 +24,11 @@ tasks:
   install:lychee:
     desc: Install Lychee
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: lycheeverse.lychee
           VERSION: "{{.VERSION.lychee}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: lychee@{{.VERSION.lychee}}
       - cmd: |

@@ -8,11 +8,11 @@ tasks:
   install:dapr:
     desc: Install Dapr
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Dapr.CLI
           VERSION: "{{.VERSION.dapr}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: dapr/tap/dapr-cli@{{.VERSION.dapr}}
       - cmd: |
@@ -23,11 +23,11 @@ tasks:
   install:oras:
     desc: Install ORAS
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: ORASProject.ORAS
           VERSION: "{{.VERSION.oras}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: oras@{{.VERSION.oras}}
       - cmd: |
@@ -38,11 +38,11 @@ tasks:
   install:jq:
     desc: Install JQ
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: jqlang.jq
           VERSION: "{{.VERSION.jq}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: jq@{{.VERSION.jq}}
       - cmd: |
@@ -53,11 +53,11 @@ tasks:
   install:mise:
     desc: Install MISE
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: jdx.mise
           VERSION: "{{.VERSION.mise}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: mise@{{.VERSION.mise}}
       - cmd: |

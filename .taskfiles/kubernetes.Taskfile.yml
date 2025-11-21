@@ -8,11 +8,11 @@ tasks:
   install:kubectl:
     desc: Install Kubectl
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Kubernetes.kubectl
           VERSION: "{{.VERSION.kubectl}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: kubernetes-cli@{{.VERSION.kubectl}}
       - cmd: |
@@ -33,11 +33,11 @@ tasks:
   install:helm:
     desc: Install Helm
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Helm.Helm
           VERSION: "{{.VERSION.helm}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: kubernetes-helm@{{.VERSION.helm}}
       - cmd: |
@@ -52,11 +52,11 @@ tasks:
   install:kind:
     desc: Install Kind
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Kubernetes.kind
           VERSION: "{{.VERSION.kind}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: kind@{{.VERSION.kind}}
       - cmd: |
@@ -74,11 +74,11 @@ tasks:
   install:k3d:
     desc: Install K3d
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: k3d.k3d
           VERSION: "{{.VERSION.k3d}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: k3d@{{.VERSION.k3d}}
       - cmd: |
@@ -90,7 +90,7 @@ tasks:
   install:envtest:
     desc: Install EnvTest Manager
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: sigs.k8s.io/controller-runtime/tools/setup-envtest@{{.VERSION.envtest}}
 
@@ -98,11 +98,11 @@ tasks:
   install:stern:
     desc: Install Stern
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: stern.stern
           VERSION: "{{.VERSION.stern}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: stern@{{.VERSION.stern}}
       - cmd: |

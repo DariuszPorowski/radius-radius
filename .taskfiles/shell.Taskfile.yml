@@ -8,11 +8,11 @@ tasks:
   install:shellcheck:
     desc: Install shellcheck
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: shellcheck
           VERSION: "{{.VERSION.shellcheck}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: shellcheck@{{.VERSION.shellcheck}}
       - cmd: |
@@ -23,7 +23,7 @@ tasks:
   install:shfmt:
     desc: Install shfmt
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: mvdan.shfmt
           VERSION: "{{.VERSION.shfmt}}"

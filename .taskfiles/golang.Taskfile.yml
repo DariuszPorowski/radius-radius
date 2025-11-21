@@ -8,7 +8,7 @@ tasks:
   install:dlv:
     desc: Install Dlv
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: github.com/go-delve/delve/cmd/dlv@{{.VERSION.dlv}}
 
@@ -16,7 +16,7 @@ tasks:
   install:deadcode:
     desc: Install DeadCode
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: golang.org/x/tools/cmd/deadcode@{{.VERSION.deadcode}}
 
@@ -24,11 +24,11 @@ tasks:
   install:golangci-lint:
     desc: Install GolangCI-Lint
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: GolangCI.golangci-lint
           VERSION: "{{.VERSION.golangciLint}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: golangci-lint@{{.VERSION.golangciLint}}
       - cmd: |
@@ -39,7 +39,7 @@ tasks:
   install:gotestsum:
     desc: Install GoTestSum
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: gotest.tools/gotestsum@{{.VERSION.gotestsum}}
 
@@ -47,7 +47,7 @@ tasks:
   install:govulncheck:
     desc: Install GoVulnCheck
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: golang.org/x/vuln/cmd/govulncheck@{{.VERSION.govulncheck}}
 
@@ -55,7 +55,7 @@ tasks:
   install:goimports:
     desc: Install GoImports
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: golang.org/x/tools/cmd/goimports@{{.VERSION.goimports}}
 
@@ -63,7 +63,7 @@ tasks:
   install:gofumpt:
     desc: Install GoFumpt
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: mvdan.cc/gofumpt@{{.VERSION.gofumpt}}
 
@@ -71,7 +71,7 @@ tasks:
   install:go-test-coverage:
     desc: Install Go Test Coverage
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: github.com/vladopajic/go-test-coverage/v2@{{.VERSION.goTestCoverage}}
 
@@ -79,7 +79,7 @@ tasks:
   install:gocover-cobertura:
     desc: Install GoCover-Cobertura
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: github.com/boumenot/gocover-cobertura@{{.VERSION.gocoverCobertura}}
 
@@ -87,7 +87,7 @@ tasks:
   install:mockgen:
     desc: Install MockGen
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: go.uber.org/mock/mockgen@{{.VERSION.mockgen}}
 
@@ -95,7 +95,7 @@ tasks:
   install:controller-gen:
     desc: Install Controller-Gen
     cmds:
-      - task: :internal:install:go
+      - task: :internal:_install:go
         vars:
           APP: sigs.k8s.io/controller-tools/cmd/controller-gen@{{.VERSION.controllerGen}}
 

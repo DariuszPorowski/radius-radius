@@ -120,7 +120,7 @@ tasks:
           {{end}}
         platforms: [windows]
 
-  install:go:
+  _install:go:
     desc: go install
     internal: true
     preconditions:
@@ -131,7 +131,7 @@ tasks:
     cmds:
       - go install {{.APP}}
 
-  install:winget:
+  _install:winget:
     desc: winget install
     internal: true
     preconditions:
@@ -147,7 +147,7 @@ tasks:
     ignore_error: true
     platforms: [windows]
 
-  install:brew:
+  _install:brew:
     desc: brew install
     internal: true
     preconditions:
@@ -159,7 +159,7 @@ tasks:
       - brew install {{.APP}}
     platforms: [darwin]
 
-  install:brew:tap:
+  _install:brew:tap:
     desc: brew tap
     internal: true
     preconditions:
@@ -171,7 +171,7 @@ tasks:
       - brew tap {{.APP}}
     platforms: [darwin]
 
-  install:pipx:
+  _install:pipx:
     desc: pipx install
     internal: true
     preconditions:
@@ -182,7 +182,7 @@ tasks:
     cmds:
       - pipx install --include-deps {{.APP}}
 
-  install:npm:
+  _install:npm:
     desc: npm install
     internal: true
     preconditions:
@@ -193,12 +193,12 @@ tasks:
     cmds:
       - npm install {{if .OPTS}}{{.OPTS}}{{else}}--global{{end}} {{.APP}}
 
-  install:uv:
+  _install:uv:
     desc: uv install
     internal: true
     preconditions:
       - sh: task internal:command -- uv
-        msg: "uv is not installed. Please install uv by running: `task runtime:setup:uv`"
+        msg: uv is not installed. Please install by running 'task runtime:setup:uv'
     requires:
       vars: [APP]
     cmds:

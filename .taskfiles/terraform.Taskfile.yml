@@ -8,14 +8,14 @@ tasks:
   install:terraform:
     desc: Install Terraform
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: HashiCorp.Terraform
           VERSION: "{{.VERSION.terraform}}"
-      - task: :internal:install:brew:tap
+      - task: :internal:_install:brew:tap
         vars:
           APP: hashicorp/tap
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: hashicorp/tap/terraform@{{.VERSION.terraform}}
       - cmd: |
@@ -26,11 +26,11 @@ tasks:
   install:opentofu:
     desc: Install OpenTofu
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: OpenTofu.Tofu
           VERSION: "{{.VERSION.opentofu}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: opentofu@{{.VERSION.opentofu}}
       - cmd: |

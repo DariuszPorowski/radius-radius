@@ -8,11 +8,11 @@ tasks:
   install:az:
     desc: Install Azure CLI
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Microsoft.AzureCLI
           VERSION: "{{.VERSION.az}}"
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: azure-cli@{{.VERSION.az}}
       - cmd: |
@@ -24,14 +24,14 @@ tasks:
   install:azd:
     desc: Install Azure CLI
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Microsoft.Azd
           VERSION: "{{.VERSION.azd}}"
-      - task: :internal:install:brew:tap
+      - task: :internal:_install:brew:tap
         vars:
           APP: azure/azd
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: azd@{{.VERSION.azd}}
       - cmd: |
@@ -42,14 +42,14 @@ tasks:
   install:bicep:
     desc: Install Bicep
     cmds:
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Microsoft.Bicep
           VERSION: "{{.VERSION.bicep}}"
-      - task: :internal:install:brew:tap
+      - task: :internal:_install:brew:tap
         vars:
           APP: azure/bicep
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: bicep@{{.VERSION.bicep}}
       - cmd: |

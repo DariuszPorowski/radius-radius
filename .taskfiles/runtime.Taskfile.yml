@@ -10,10 +10,10 @@ tasks:
       - cmd: |
           ./.taskfiles/scripts/setup_uv.sh "{{.VERSION.uv}}"
         platforms: [linux]
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: uv@{{.VERSION.uv}}
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: astral-sh.uv
           VERSION: "{{.VERSION.uv}}"
@@ -24,10 +24,10 @@ tasks:
       - cmd: |
           ./.taskfiles/scripts/setup_fnm.sh "{{.VERSION.fnm}}"
         platforms: [linux]
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: fnm@{{.VERSION.fnm}}
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Schniz.fnm
           VERSION: "{{.VERSION.fnm}}"
@@ -39,10 +39,10 @@ tasks:
           sudo ./.taskfiles/scripts/setup_pwsh.sh "{{.VERSION.pwsh}}"
         platforms: [linux]
       # TODO:
-      # - task: :internal:install:brew
+      # - task: :internal:_install:brew
       #   vars:
       #     APP: "powershell@{{.VERSION.pwsh}}"
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: Microsoft.PowerShell
           VERSION: "{{.VERSION.pwsh}}"
@@ -53,10 +53,10 @@ tasks:
       - cmd: |
           ./.taskfiles/scripts/setup_golang.sh "{{.VERSION.golang}}"
         platforms: [linux]
-      - task: :internal:install:brew
+      - task: :internal:_install:brew
         vars:
           APP: golang@{{.VERSION.golang}}
-      - task: :internal:install:winget
+      - task: :internal:_install:winget
         vars:
           APP: GoLang.Go
           VERSION: "{{.VERSION.golang}}"

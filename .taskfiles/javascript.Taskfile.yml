@@ -26,9 +26,10 @@ tasks:
       - for: { var: ITEMS }
         task: install:{{.ITEM}}
 
-  # * Run Prettier Check
-  run:prettier:check:
-    desc: Run Prettier Check
+  # * Prettier Runner
+  _run:prettier:
+    internal: true
+    desc: Run Prettier
     preconditions:
       - sh: task internal:command -- prettier
         msg: prettier is not installed. Please run 'task js:install:prettier'
@@ -43,37 +44,39 @@ tasks:
       - "**/*.jsx"
       - "**/*.json"
       - "**/*.jsonc"
+    vars:
+      # yamllint disable-line rule:quoted-strings
+      MODE: '{{default "--check" .MODE}}'
     cmds:
-      - defer: echo '{{if .EXIT_CODE}}⚠️ JavaScript/TypeScript/JSON files are not formatted correctly. Please run 'task js:lint:fix' to fix formatting issues.{{end}}'
-      - cmd: prettier --config .github/linters/.prettierrc.yml --check "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
+      - defer: |
+          {{if and .EXIT_CODE (eq .MODE "--check")}}echo "⚠️ JavaScript/TypeScript/JSON files are not formatted correctly. Please run 'task js:run:prettier:fix' to fix formatting issues."{{end}}
+      - prettier --config .github/linters/.prettierrc.yml {{.MODE}} "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
     dir: "{{.ROOT_DIR}}"
+
+  # * Run Prettier Check
+  run:prettier:check:
+    desc: Run Prettier Check
+    cmds:
+      - task: _run:prettier
+        vars: { MODE: --check }
 
   # * Run Prettier Fix
   run:prettier:fix:
     desc: Run Prettier fix
-    aliases:
-      - lint
-    preconditions:
-      - sh: task internal:command -- prettier
-        msg: prettier is not installed. Please run 'task js:install:prettier'
-      - sh: task internal:command:version -- "prettier --version" "{{.VERSION.prettier}}"
-        msg: "Version Mismatch: You are not using {{.VERSION.prettier}} version. Please run 'task js:install:prettier'"
-    sources:
-      - "**/*.js"
-      - "**/*.cjs"
-      - "**/*.mjs"
-      - "**/*.ts"
-      - "**/*.tsx"
-      - "**/*.jsx"
-      - "**/*.json"
-      - "**/*.jsonc"
     cmds:
-      - prettier --config ./.github/linters/.prettierrc.yml --write "./**/*.{js,cjs,mjs,ts,tsx,jsx,json,jsonc}"
-    dir: "{{.ROOT_DIR}}"
+      - task: _run:prettier
+        vars: { MODE: --write }
 
   # * Lint
   lint:check:
     desc: Lint JavaScript/TypeScript/JSON files
     cmds:
       - task: run:prettier:check
-    dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:fix:
+    aliases:
+      - lint
+    desc: Lint JavaScript/TypeScript/JSON files
+    cmds:
+      - task: run:prettier:fix
