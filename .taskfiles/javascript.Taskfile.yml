@@ -55,14 +55,14 @@ tasks:
 
   # * Run Prettier Check
   run:prettier:check:
-    desc: Run Prettier Check
+    desc: Run Prettier (check)
     cmds:
       - task: _run:prettier
         vars: { MODE: --check }
 
   # * Run Prettier Fix
   run:prettier:fix:
-    desc: Run Prettier fix
+    desc: Run Prettier (fix)
     cmds:
       - task: _run:prettier
         vars: { MODE: --write }
