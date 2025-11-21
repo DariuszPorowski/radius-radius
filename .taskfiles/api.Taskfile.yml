@@ -8,7 +8,7 @@ tasks:
   install:autorest:
     desc: Install Autorest
     cmds:
-      - task: :internal:install:npm
+      - task: :internal:_install:npm
         vars:
           APP: autorest@{{.VERSION.autorest}}
 
@@ -16,7 +16,7 @@ tasks:
   install:oav:
     desc: Install OAV
     cmds:
-      - task: :internal:install:npm
+      - task: :internal:_install:npm
         vars:
           APP: oav@{{.VERSION.oav}}
 
@@ -24,7 +24,7 @@ tasks:
   install:typespec:
     desc: Install TypeSpec
     cmds:
-      - task: :internal:install:npm
+      - task: :internal:_install:npm
         vars:
           APP: "@typespec/compiler@{{.VERSION.typespec}}"
 
@@ -45,7 +45,9 @@ tasks:
     desc: Lint API files
     preconditions:
       - sh: task internal:command -- tsp
-        msg: "Error: tsp is not installed. Please run 'task api:install:typespec'"
+        msg: "❌ Error: tsp is not installed. Please run 'task api:install:typespec'"
+      - sh: task internal:command:version -- "tsp --version" "{{.VERSION.typespec}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.typespec}} version. Please run 'task api:install:typespec'"
     sources:
       - "**/*.tsp"
     cmds:

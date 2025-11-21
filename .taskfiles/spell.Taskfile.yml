@@ -8,7 +8,7 @@ tasks:
   install:cspell:
     desc: Install CSpell
     cmds:
-      - task: :internal:install:npm
+      - task: :internal:_install:npm
         vars:
           APP: cspell@{{.VERSION.cspell}}
 
@@ -52,11 +52,17 @@ tasks:
     desc: Lint Spell files
     preconditions:
       - sh: task internal:command -- codespell
-        msg: "Error: codespell is not installed. Please run 'task spell:install:codespell'"
+        msg: "❌ Error: codespell is not installed. Please run 'task spell:install:codespell'"
+      - sh: task internal:command:version -- "codespell --version" "{{.VERSION.codespell}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.codespell}} version. Please run 'task spell:install:codespell'"
       - sh: task internal:command -- cspell
-        msg: "Error: cspell is not installed. Please run 'task spell:install:cspell'"
+        msg: "❌ Error: cspell is not installed. Please run 'task spell:install:cspell'"
+      - sh: task internal:command:version -- "cspell --version" "{{.VERSION.cspell}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.cspell}} version. Please run 'task spell:install:cspell'"
       - sh: task internal:command -- lychee
-        msg: "Error: lychee is not installed. Please run 'task spell:install:lychee'"
+        msg: "❌ Error: lychee is not installed. Please run 'task spell:install:lychee'"
+      - sh: task internal:command:version -- "lychee --version" "{{.VERSION.lychee}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.lychee}} version. Please run 'task spell:install:lychee'"
     cmds:
       - codespell --config ./.github/linters/.codespellrc --summary --write-changes
       - cspell --config ./.github/linters/.cspell.yml "./**/*.md"

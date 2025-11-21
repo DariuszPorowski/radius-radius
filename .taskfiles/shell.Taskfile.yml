@@ -47,9 +47,13 @@ tasks:
     desc: Lint Shell files
     preconditions:
       - sh: task internal:command -- shfmt
-        msg: "Error: shfmt is not installed. Please run 'task sh:install:shfmt"
+        msg: "❌ Error: shfmt is not installed. Please run 'task sh:install:shfmt"
+      - sh: task internal:command:version -- "shfmt --version" "{{.VERSION.shfmt}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.shfmt}} version. Please run 'task sh:install:shfmt'"
       - sh: task internal:command -- shellcheck
-        msg: "Error: shellcheck is not installed. Please run 'task sh:install:shellcheck"
+        msg: "❌ Error: shellcheck is not installed. Please run 'task sh:install:shellcheck"
+      - sh: task internal:command:version -- "shellcheck --version" "{{.VERSION.shellcheck}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.shellcheck}} version. Please run 'task sh:install:shellcheck'"
     vars:
       SHELL_FILES:
         sh: |
