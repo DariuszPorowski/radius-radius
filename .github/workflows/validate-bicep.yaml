@@ -26,9 +26,6 @@ on:
       - main
       - release/*
 
-permissions:
-  id-token: write # Required for requesting the JWT
-
 env:
   # Local Docker registry name
   LOCAL_REGISTRY_NAME: radius-registry
@@ -42,6 +39,8 @@ concurrency:
   group: bicep-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
+permissions: {} # disable permissions
+
 jobs:
   changes:
     name: Changes
@@ -54,10 +53,16 @@ jobs:
     name: Validate Bicep Code
     if: needs.changes.outputs.only_changed != 'true'
     needs: [changes]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Check out repo
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
