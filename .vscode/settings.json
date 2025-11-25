@@ -51,19 +51,19 @@
     },
     "markdownlint": {
       "configFiles": ["./.github/linters/.markdownlint.yml"]
-    },
-    "shellcheck": {
-      "configFiles": ["./.github/linters/.shellcheckrc"],
-      "command": [
-        "shellcheck",
-        "--format",
-        "json",
-        "--enable",
-        "all",
-        "--rcfile",
-        "$config",
-        "-"
-      ]
     }
+    // "shellcheck": {
+    //   "configFiles": ["./.github/linters/.shellcheckrc"],
+    //   "command": [
+    //     "shellcheck",
+    //     "--format",
+    //     "json",
+    //     "--enable",
+    //     "all",
+    //     "--rcfile",
+    //     "$config",
+    //     "-"
+    //   ]
+    // }
   }
 }
