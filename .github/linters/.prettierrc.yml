@@ -8,12 +8,12 @@ insertPragma: false
 singleAttributePerLine: false
 bracketSameLine: false
 jsxSingleQuote: true
-printWidth: 120
+printWidth: 80
 proseWrap: preserve
 quoteProps: consistent
 requirePragma: false
 semi: true
-singleQuote: false # consider true
+singleQuote: true # consider true
 tabWidth: 2
 trailingComma: none
 useTabs: false
