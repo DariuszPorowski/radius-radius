@@ -1,49 +1,84 @@
+// For format details, see https://aka.ms/devcontainer.json
 {
-  "name": "Radius - Contributor",
   // For details see https://github.com/radius-project/radius/tree/main/docs/contributing/contributing-code/contributing-code-prerequisites
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "name": "Radius",
+  // Available base images: https://mcr.microsoft.com/v2/devcontainers/base/tags/list
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu24.04",
+  // Features to add to the dev container. More info: https://containers.dev/features
   "features": {
-    //Git and GitHub Setup
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    //Programming languages
-    "ghcr.io/devcontainers/features/go:1": {},
-    "ghcr.io/guiyomh/features/gotestsum:0.1.1": {},
-    "ghcr.io/devcontainers/features/node:1": {},
-    "ghcr.io/devcontainers/features/python:1": {},
-    //Container and K8s
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-      "minikube": "none"
-    },
+    // Containers
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "moby": true
     },
-    //Tools
-    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-    "ghcr.io/mpriscella/features/kind:1": {},
-    "ghcr.io/rio/features/k3d:1": {},
-    "ghcr.io/dhoeric/features/stern:1": {},
-    //Dapr
-    "ghcr.io/dapr/cli/dapr-cli:0": {}
+    // Tools
+    "ghcr.io/meaningful-ooo/devcontainer-features/fish:2": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {
+      // ? move to Taskfile?
+      "jqVersion": "latest",
+      "yqVersion": "latest",
+      "gojqVersion": "latest",
+      "jaqVersion": "latest"
+    },
+    "ghcr.io/eitsupi/devcontainer-features/go-task:1": {}
+  },
+  "onCreateCommand": {
+    "chown-local": "sudo chown -R $(id -un):$(id -gn) $HOME/.local", // ! workaround/fix for pwsh
+    "init": "task init"
+  },
+  "postCreateCommand": {
+    "git-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+  },
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
+  "hostRequirements": {
+    "memory": "8gb"
   },
   "customizations": {
     "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.defaultProfile.osx": "zsh",
+        "terminal.integrated.defaultProfile.windows": "PowerShell",
+        "powershell.powerShellAdditionalExePaths": {
+          "pwsh": "/usr/bin/pwsh"
+        },
+        "powershell.powerShellDefaultVersion": "pwsh",
+        "shellformat.path": "/home/${remoteUser}/.local/bin/shfmt"
+      },
       "extensions": [
         "redhat.vscode-yaml",
         "golang.go",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
         "ms-azuretools.vscode-bicep",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-vscode.powershell",
         "ms-vscode.makefile-tools",
         "timonwong.shellcheck",
-        "typespec.typespec-vscode"
+        "typespec.typespec-vscode",
+        "task.vscode-task",
+        "esbenp.prettier-vscode",
+        "ms-vscode.azurecli",
+        "fnando.linter",
+        "hashicorp.terraform",
+        "edwinhuish.better-comments-next",
+        "ms-azuretools.vscode-azure-github-copilot",
+        "ms-azuretools.vscode-docker",
+        "editorconfig.editorconfig",
+        "davidanson.vscode-markdownlint",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "github.codespaces",
+        "github.remotehub",
+        "bierner.github-markdown-preview",
+        "usernamehw.errorlens",
+        "lumirelle.shell-format-rev"
       ]
     }
-  },
-  "postCreateCommand": ".devcontainer/post-create.sh",
-  "hostRequirements": {
-    "memory": "8gb"
   }
 }

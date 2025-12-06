@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# docs: https://taskfile.dev
+---
+version: "3"
+
+tasks:
+  # * Install YAMLlint
+  install:yamllint:
+    desc: Install YAMLlint
+    cmds:
+      - task: :internal:_install:uv
+        vars:
+          APP: yamllint@{{.VERSION.yamllint}}
+
+  # * Tools
+  tools:
+    desc: Install YAML tools
+    vars:
+      ITEMS:
+        - yamllint
+    cmds:
+      - for: { var: ITEMS }
+        task: install:{{.ITEM}}
+
+  # * Run YAMLlint
+  run:yamllint:
+    desc: Run YAMLlint
+    preconditions:
+      - sh: task internal:command -- yamllint
+        msg: "❌ Error: yamllint is not installed. Please run 'task yml:install:yamllint'"
+      - sh: task internal:command:version -- "yamllint --version" "{{.VERSION.yamllint}}"
+        msg: "❌ Version Mismatch: You are not using {{.VERSION.yamllint}} version. Please run 'task yml:install:yamllint'"
+    sources:
+      - "**/*.yml"
+      - "**/*.yaml"
+    cmds:
+      - yamllint --config-file ./.github/linters/.yamllint.yml --format auto --strict .
+    dir: "{{.ROOT_DIR}}"
+
+  # * Lint
+  lint:
+    desc: Lint YAML files
+    cmds:
+      - task: run:yamllint

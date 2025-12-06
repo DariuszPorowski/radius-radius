@@ -47,9 +47,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # gotestsum version - see: https://github.com/gotestyourself/gotestsum
-  GOTESTSUMVERSION: 1.10.0
-
   # GitHub Actor for pushing images to GHCR
   GHCR_ACTOR: rad-ci-bot
 
@@ -58,9 +55,6 @@ env:
 
   # Local file path to the release binaries.
   RELEASE_PATH: ./release
-
-  # ORAS (OCI Registry As Storage) CLI version
-  ORAS_VERSION: 1.1.0
 
   # URL to get source code for building the image
   IMAGE_SRC: https://github.com/radius-project/radius
@@ -89,19 +83,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - target_os: linux
-            target_arch: arm
-          - target_os: linux
-            target_arch: arm64
-          - target_os: linux
-            target_arch: amd64
+        target_os: [linux, windows, darwin]
+        target_arch: [amd64, arm64, arm]
+        exclude:
           - target_os: windows
-            target_arch: amd64
+            target_arch: arm
           - target_os: darwin
-            target_arch: amd64
-          - target_os: darwin
-            target_arch: arm64
+            target_arch: arm # darwin/arm (32-bit) not needed
     steps:
       - name: Check out repo
         if: needs.changes.outputs.only_changed != 'true'
@@ -138,7 +126,6 @@ jobs:
           GOTEST_OPTS: -race -coverprofile ./dist/unit_test/ut_coverage.out
         run: |
           mkdir -p ./dist/unit_test
-          go install gotest.tools/gotestsum@v${{ env.GOTESTSUMVERSION }}
           make test
 
       - name: Upload coverage to Codecov
