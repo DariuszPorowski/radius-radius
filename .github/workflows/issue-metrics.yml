@@ -22,8 +22,7 @@ on:
           - weekly
           - monthly
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   issue-metrics:
@@ -44,28 +43,28 @@ jobs:
 
           # Determine type
           TYPE="monthly" # Default
-          if [[ "$EVENT_NAME" == "schedule" ]]; then
-            if [[ "$SCHEDULE" == "0 8 1 * *" ]]; then
+          if [[ "$INPUT_EVENT_NAME" == "schedule" ]]; then
+            if [[ "$INPUT_SCHEDULE" == "0 8 1 * *" ]]; then
               TYPE="monthly"
             fi
-          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+          elif [[ "$INPUT_EVENT_NAME" == "workflow_dispatch" ]]; then
             TYPE="$INPUT_REPORT_TYPE"
           fi
 
           # Set query
           if [[ "$TYPE" == "weekly" ]]; then
-            echo "search_query=repo:${REPOSITORY} is:issue is:pr created:>${last_week}" >> "$GITHUB_OUTPUT"
+            echo "search_query=repo:${INPUT_REPOSITORY} is:issue is:pr created:>${last_week}" >> "$GITHUB_OUTPUT"
           else
-            echo "search_query=repo:${REPOSITORY} is:issue is:pr created:${last_month}" >> "$GITHUB_OUTPUT"
+            echo "search_query=repo:${INPUT_REPOSITORY} is:issue is:pr created:${last_month}" >> "$GITHUB_OUTPUT"
           fi
         env:
-          REPOSITORY: radius-project/radius # ${{ github.repository }}
-          EVENT_NAME: ${{ github.event_name }}
-          SCHEDULE: ${{ github.event_name == 'schedule' && github.event.schedule || '' }}
+          INPUT_REPOSITORY: radius-project/radius # ${{ github.repository }}
+          INPUT_EVENT_NAME: ${{ github.event_name }}
+          INPUT_SCHEDULE: ${{ github.event_name == 'schedule' && github.event.schedule || '' }}
           INPUT_REPORT_TYPE: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.report_type || '' }}
 
-      - name: Run Tool
-        uses: github/issue-metrics@637a24e71b78bc10881e61972b19ea9ff736e14a # v3.25.2
+      - name: Run
+        uses: github/issue-metrics@67526e7bd8100b870f10b1c120780a8375777b43 # v3.25.5
         env:
           GH_TOKEN: ${{ github.token }}
           SEARCH_QUERY: ${{ steps.config.outputs.search_query }}
