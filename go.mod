@@ -1,6 +1,6 @@
 module github.com/radius-project/radius
 
-go 1.25.0
+go 1.25.5
 
 // Replace digest lib to master to gather access to BLAKE3.
 // xref: https://github.com/opencontainers/go-digest/pull/66
@@ -10,10 +10,6 @@ replace github.com/opencontainers/go-digest => github.com/opencontainers/go-dige
 replace github.com/Azure/bicep-types/src/bicep-types-go => ./bicep-types/src/bicep-types-go
 
 replace github.com/stretchr/testify => github.com/stretchr/testify v1.10.0
-
-// Pin golang.org/x/tools to v0.23.0 to avoid compiler crash with Go 1.24.x
-// xref: https://github.com/golang/go/issues/64875
-replace golang.org/x/tools => golang.org/x/tools v0.23.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
@@ -32,12 +28,12 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/agnivade/levenshtein v1.2.1
 	github.com/aws/aws-sdk-go-v2 v1.40.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.0
+	github.com/aws/aws-sdk-go-v2/config v1.32.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.70.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.272.1
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.53.1
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.274.0
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.1
 	github.com/aws/smithy-go v1.23.2
 	github.com/charmbracelet/bubbles v0.20.0
@@ -53,7 +49,7 @@ require (
 	github.com/fluxcd/source-controller/api v1.7.4
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/go-chi/chi/v5 v5.2.3
-	github.com/go-git/go-git/v5 v5.16.3
+	github.com/go-git/go-git/v5 v5.16.4
 	github.com/go-logr/logr v1.4.3
 	github.com/go-logr/zapr v1.3.0
 	github.com/go-openapi/errors v0.22.4
@@ -120,13 +116,6 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/service/signin v1.0.1 // indirect
-	github.com/clipperhouse/displaywidth v0.6.0 // indirect
-	github.com/clipperhouse/stringish v0.1.1 // indirect
-	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
-)
-
-require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
 	cloud.google.com/go/auth v0.13.0 // indirect
@@ -165,8 +154,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.80.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.0.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.9 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymanbagabas/go-udiff v0.3.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -178,6 +168,9 @@ require (
 	github.com/charmbracelet/x/cellbuf v0.0.14 // indirect
 	github.com/charmbracelet/x/exp/golden v0.0.0-20241011142426-46044092ad91 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
+	github.com/clipperhouse/displaywidth v0.6.0 // indirect
+	github.com/clipperhouse/stringish v0.1.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
 	github.com/containerd/containerd v1.7.29
@@ -333,13 +326,13 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.46.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.31.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.36.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
