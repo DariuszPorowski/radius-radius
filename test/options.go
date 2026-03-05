@@ -17,6 +17,7 @@ limitations under the License.
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,22 +38,35 @@ type TestOptions struct {
 	Client         client.WithWatch
 }
 
-// NewTestOptions creates a TestOptions struct with the necessary clients and configs for testing.
-func NewTestOptions(t *testing.T) TestOptions {
+// TryNewTestOptions creates a TestOptions struct with the necessary clients and
+// configs for testing. It returns an error instead of calling t.FailNow(), making
+// it safe to call from goroutines or retry loops where t.FailNow() would cause a
+// runtime.Goexit() in the wrong goroutine.
+func TryNewTestOptions(t *testing.T) (TestOptions, error) {
 	config, err := cli.LoadConfig("")
-	require.NoError(t, err, "failed to read radius config")
+	if err != nil {
+		return TestOptions{}, fmt.Errorf("failed to read radius config: %w", err)
+	}
 
 	contextName, err := kubernetes.GetContextFromConfigFileIfExists("", "")
-	require.NoError(t, err, "failed to read k8s config")
+	if err != nil {
+		return TestOptions{}, fmt.Errorf("failed to read k8s config: %w", err)
+	}
 
 	k8s, restConfig, err := kubernetes.NewClientset(contextName)
-	require.NoError(t, err, "failed to create kubernetes client")
+	if err != nil {
+		return TestOptions{}, fmt.Errorf("failed to create kubernetes client: %w", err)
+	}
 
 	dynamicClient, err := kubernetes.NewDynamicClient(contextName)
-	require.NoError(t, err, "failed to create kubernetes dyamic client")
+	if err != nil {
+		return TestOptions{}, fmt.Errorf("failed to create kubernetes dynamic client: %w", err)
+	}
 
 	client, err := kubernetes.NewRuntimeClient(contextName, kubernetes.Scheme)
-	require.NoError(t, err, "failed to create runtime client")
+	if err != nil {
+		return TestOptions{}, fmt.Errorf("failed to create runtime client: %w", err)
+	}
 
 	return TestOptions{
 		ConfigFilePath: config.ConfigFileUsed(),
@@ -60,5 +74,12 @@ func NewTestOptions(t *testing.T) TestOptions {
 		K8sConfig:      restConfig,
 		Client:         client,
 		DynamicClient:  dynamicClient,
-	}
+	}, nil
+}
+
+// NewTestOptions creates a TestOptions struct with the necessary clients and configs for testing.
+func NewTestOptions(t *testing.T) TestOptions {
+	opts, err := TryNewTestOptions(t)
+	require.NoError(t, err)
+	return opts
 }

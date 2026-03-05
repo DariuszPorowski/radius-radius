@@ -149,9 +149,11 @@ type TestOptions struct {
 	DiscoveryClient discovery.DiscoveryInterface
 }
 
-// NewRPTestOptions sets up the test environment by loading configs, creating a test context, creating an
-// ApplicationsManagementClient, creating an AWSCloudControlClient, and returning an RPTestOptions struct.
-func NewRPTestOptions(t *testing.T) RPTestOptions {
+// TryNewRPTestOptions sets up the test environment and returns an RPTestOptions
+// struct or an error. It returns an error instead of calling t.FailNow(), making
+// it safe to call from goroutines or retry loops where t.FailNow() would cause a
+// runtime.Goexit() in the wrong goroutine.
+func TryNewRPTestOptions(t *testing.T) (RPTestOptions, error) {
 	registry, tag := testutil.SetDefault()
 	t.Logf("Using container registry: %s - set DOCKER_REGISTRY to override", registry)
 	t.Logf("Using container tag: %s - set REL_VERSION to override", tag)
@@ -168,38 +170,65 @@ func NewRPTestOptions(t *testing.T) RPTestOptions {
 	ctx := testcontext.New(t)
 
 	config, err := cli.LoadConfig("")
-	require.NoError(t, err, "failed to read radius config")
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to read radius config: %w", err)
+	}
 
 	workspace, err := cli.GetWorkspace(config, "")
-	require.NoError(t, err, "failed to read default workspace")
-	require.NotNil(t, workspace, "default workspace is not set")
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to read default workspace: %w", err)
+	}
+	if workspace == nil {
+		return RPTestOptions{}, fmt.Errorf("default workspace is not set")
+	}
 
 	t.Logf("Loaded workspace: %s (%s)", workspace.Name, workspace.FmtConnection())
 
 	client, err := connections.DefaultFactory.CreateApplicationsManagementClient(ctx, *workspace)
-	require.NoError(t, err, "failed to create ApplicationsManagementClient")
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to create ApplicationsManagementClient: %w", err)
+	}
 
 	connection, err := workspace.Connect(ctx)
-	require.NoError(t, err, "failed to connect to workspace")
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to connect to workspace: %w", err)
+	}
 
 	customAction, err := clientv2.NewCustomActionClient("", &clientv2.Options{
 		BaseURI: strings.TrimRight(connection.Endpoint(), "/"),
 		Cred:    &aztoken.AnonymousCredential{},
 	}, sdk.NewClientOptions(connection))
-	require.NoError(t, err, "failed to create CustomActionClient")
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to create CustomActionClient: %w", err)
+	}
 
 	cfg, err := awsconfig.LoadDefaultConfig(ctx)
-	require.NoError(t, err)
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to load AWS config: %w", err)
+	}
 	var awsClient aws.AWSCloudControlClient = cloudcontrol.NewFromConfig(cfg)
 
+	testOpts, err := test.TryNewTestOptions(t)
+	if err != nil {
+		return RPTestOptions{}, fmt.Errorf("failed to create test options: %w", err)
+	}
+
 	return RPTestOptions{
-		TestOptions:      test.NewTestOptions(t),
+		TestOptions:      testOpts,
 		Workspace:        workspace,
 		CustomAction:     customAction,
 		ManagementClient: client,
 		AWSClient:        awsClient,
 		Connection:       connection,
-	}
+	}, nil
+}
+
+// NewRPTestOptions sets up the test environment by loading configs, creating a test context, creating an
+// ApplicationsManagementClient, creating an AWSCloudControlClient, and returning an RPTestOptions struct.
+func NewRPTestOptions(t *testing.T) RPTestOptions {
+	opts, err := TryNewRPTestOptions(t)
+	require.NoError(t, err)
+	return opts
 }
 
 // NewTestOptions creates a new TestOptions object with the given testing.T object.
