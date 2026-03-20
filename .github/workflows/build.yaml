@@ -42,7 +42,7 @@ concurrency:
 
 env:
   # gotestsum version - see: https://github.com/gotestyourself/gotestsum
-  GOTESTSUMVERSION: 1.10.0
+  GOTESTSUMVERSION: 1.13.0
 
   # GitHub Actor for pushing images to GHCR
   GHCR_ACTOR: rad-ci-bot
@@ -58,9 +58,6 @@ env:
 
   # URL to get source code for building the image
   IMAGE_SRC: https://github.com/radius-project/radius
-
-  # bicep-types ACR url for uploading Radius Bicep types
-  BICEP_TYPES_REGISTRY: biceptypes.azurecr.io
 
 jobs:
   changes:
@@ -80,6 +77,7 @@ jobs:
     permissions:
       packages: write # Required for uploading the package
       contents: read # Required for actions/checkout
+      issues: read # Required for EnricoMi/publish-unit-test-result-action
       checks: write # Required for EnricoMi/publish-unit-test-result-action
       pull-requests: write # Required for EnricoMi/publish-unit-test-result-action
     env:
@@ -105,14 +103,13 @@ jobs:
     steps:
       - name: Checkout
         if: needs.changes.outputs.only_changed != 'true'
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: recursive
           persist-credentials: false
 
       - name: Setup Go
         if: needs.changes.outputs.only_changed != 'true'
-        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
@@ -120,7 +117,7 @@ jobs:
 
       - name: Setup Python
         if: needs.changes.outputs.only_changed != 'true'
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: .python-version
 
@@ -131,35 +128,6 @@ jobs:
       - name: Make build
         if: needs.changes.outputs.only_changed != 'true'
         run: make build
-
-      - name: Run make test (unit tests)
-        if: matrix.target_arch == 'amd64' && matrix.target_os == 'linux' && needs.changes.outputs.only_changed != 'true'
-        env:
-          GOTESTSUM_OPTS: --junitfile ./dist/unit_test/results.xml
-          GOTEST_OPTS: -race -coverprofile ./dist/unit_test/ut_coverage.out
-        run: |
-          mkdir -p ./dist/unit_test
-          go install gotest.tools/gotestsum@v${{ env.GOTESTSUMVERSION }}
-          make test
-
-      - name: Upload coverage to Codecov
-        if: matrix.target_arch == 'amd64' && matrix.target_os == 'linux' && needs.changes.outputs.only_changed != 'true'
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          codecov_yml_path: ./.codecov.yml
-          files: ./dist/unit_test/ut_coverage.out
-          fail_ci_if_error: false
-          verbose: true
-
-      - name: Process Unit Test Results
-        uses: ./.github/actions/process-test-results
-        # Always is required here to make sure this target runs even when tests fail.
-        if: always() && matrix.target_arch == 'amd64' && matrix.target_os == 'linux' && needs.changes.outputs.only_changed != 'true'
-        with:
-          test_group_name: Unit Tests
-          artifact_name: unit_test_results
-          result_directory: dist/unit_test/
 
       - name: Copy cli binaries to release (unix-like)
         if: matrix.target_os != 'windows' && needs.changes.outputs.only_changed != 'true'
@@ -175,14 +143,14 @@ jobs:
 
       - name: Upload CLI binary
         if: needs.changes.outputs.only_changed != 'true'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: rad_cli_${{ matrix.target_os}}_${{ matrix.target_arch}}
           path: ${{ env.RELEASE_PATH }}
 
       - name: Login to GitHub Container Registry
         if: needs.changes.outputs.only_changed != 'true'
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -209,21 +177,25 @@ jobs:
         if: needs.changes.outputs.only_changed == 'true'
         run: exit 0
 
-  # Returns success if all matrix jobs in test are successful - otherwise, it returns a failure.
+  # Returns success if all matrix jobs in build-and-push-cli are successful - otherwise, it returns a failure.
   # Use this as a PR status check for GitHub Policy Service instead of individual matrix entry checks.
-  # check-build-and-push-cli:
-  #   if: always()
-  #   name: Check Build and Push CLI Results
-  #   needs: [build-and-push-cli]
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - name: OK
-  #       if: ${{ needs.build-and-push-cli.result == 'success' || needs.build-and-push-cli.result == 'skipped'}}
-  #       run: exit 0
+  build-check:
+    if: always()
+    name: Build Check
+    needs: [build-and-push-cli]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check build matrix results
+        if: ${{ needs.build-and-push-cli.result != 'success' && needs.build-and-push-cli.result != 'skipped' }}
+        run: |
+          echo "::error::Build and push CLI jobs failed or were cancelled"
+          exit 1
 
-  #     - name: Failure
-  #       if: ${{ needs.build-and-push-cli.result == 'failure' || needs.build-and-push-cli.result == 'cancelled' }}
-  #       run: exit 1
+      - name: Build matrix succeeded
+        if: ${{ needs.build-and-push-cli.result == 'success' || needs.build-and-push-cli.result == 'skipped' }}
+        run: |
+          echo "All build matrix jobs completed successfully"
+          exit 0
 
   build-and-push-images:
     name: Build and publish container images
@@ -236,13 +208,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: recursive
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: .python-version
 
@@ -250,26 +221,51 @@ jobs:
         run: python ./.github/scripts/get_release_version.py
 
       - name: Setup Go
-        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
           cache: true
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
+
+      - name: Build container images (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          make docker-build
+        env:
+          DOCKER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}/dev
+          DOCKER_TAG_VERSION: ${{ env.REL_VERSION }}
+          DOCKER_CACHE_GHA: 1
+
+      - name: Save container images to artifacts (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          make docker-save-images
+        env:
+          DOCKER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}/dev
+          DOCKER_TAG_VERSION: ${{ env.REL_VERSION }}
+
+      - name: Upload container image artifacts (PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: container-images-${{ env.REL_VERSION }}
+          path: ./dist/images/
+          retention-days: 1
 
       - name: Push container images (latest)
         run: |
@@ -278,14 +274,7 @@ jobs:
         env:
           DOCKER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}
           DOCKER_TAG_VERSION: latest
-
-      - name: Build container images (PR) # Don't push on PR, agent will not have permission.
-        run: |
-          make docker-multi-arch-build
-        if: github.event_name == 'pull_request'
-        env:
-          DOCKER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}
-          DOCKER_TAG_VERSION: ${{ env.REL_VERSION }} # includes PR number
+          DOCKER_CACHE_GHA: 1
 
       - name: Push container images (release)
         run: |
@@ -294,6 +283,23 @@ jobs:
         env:
           DOCKER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}
           DOCKER_TAG_VERSION: ${{ env.REL_CHANNEL }}
+          DOCKER_CACHE_GHA: 1
+
+      - name: Collect build metrics
+        if: always()
+        run: |
+          make build-metrics
+          cat dist/metrics/metrics.txt >> $GITHUB_STEP_SUMMARY
+        env:
+          DOCKER_REGISTRY: ${{ github.event_name == 'pull_request' && format('{0}/dev', env.CONTAINER_REGISTRY) || env.CONTAINER_REGISTRY }}
+          DOCKER_TAG_VERSION: ${{ github.event_name == 'pull_request' && env.REL_VERSION || (github.ref == 'refs/heads/main' && 'latest' || env.REL_CHANNEL) }}
+
+      - name: Upload build metrics
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: build-metrics-${{ github.job }}
+          path: dist/metrics/
 
   build-and-push-helm-chart:
     name: Helm chart build
@@ -315,17 +321,17 @@ jobs:
       OCI_REPOSITORY: radius-project/helm-chart
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Install helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
         with:
-          version: v3.11.1
+          version: v3.19.4
 
       - name: Setup Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: .python-version
 
@@ -347,73 +353,86 @@ jobs:
           helm push ${{ env.ARTIFACT_DIR }}/${{ env.HELM_PACKAGE_DIR }}/radius-${{ env.CHART_VERSION }}.tgz oci://${{ env.OCI_REGISTRY }}/${{ env.OCI_REPOSITORY }}
 
   build-and-push-bicep-types:
-    name: Publish Radius bicep types to ACR
+    name: Dispatch Bicep Types publish
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 15
     needs: [changes]
-    if: needs.changes.outputs.only_changed != 'true'
+    if: github.repository == 'radius-project/radius' && needs.changes.outputs.only_changed != 'true' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     environment: publish-bicep
     permissions:
       contents: read # Required for actions/checkout
-      id-token: write # Required for azure/login
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: recursive
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: .python-version
 
       - name: Parse release version and set environment variables
         run: python ./.github/scripts/get_release_version.py
 
-      - name: Setup Go
-        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      - name: Get App Token
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        id: get-token
         with:
-          go-version-file: go.mod
-          cache-dependency-path: go.sum
-          cache: true
+          app-id: ${{ secrets.RADIUS_PUBLISHER_BOT_APP_ID }}
+          private-key: ${{ secrets.RADIUS_PUBLISHER_BOT_PRIVATE_KEY }}
+          permission-metadata: read
+          permission-actions: read
+          permission-contents: write
+          owner: azure-octo
+          repositories: |
+            radius-publisher
 
-      - name: Setup Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        with:
-          node-version-file: .node-version
-
-      - name: Generate Bicep extensibility types from OpenAPI specs
+      - name: Capture dispatch start time
+        id: dispatch-start
+        shell: bash
         run: |
-          make generate-bicep-types VERSION=${{ env.REL_CHANNEL == 'edge' && 'latest' || env.REL_CHANNEL }}
+          echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload Radius Bicep types artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - name: Repository Dispatch
+        id: repository-dispatch
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
         with:
-          name: radius-bicep-types
-          path: ./hack/bicep-types-radius/generated
-          if-no-files-found: error
+          token: ${{ steps.get-token.outputs.token }}
+          repository: azure-octo/radius-publisher
+          event-type: bicep-types
+          client-payload: |-
+            {
+              "source_repository": "${{ github.repository }}",
+              "source_ref": "${{ github.ref }}",
+              "source_sha": "${{ github.sha }}",
+              "rel_channel": "${{ env.REL_CHANNEL }}",
+              "registry_target": "radius"
+            }
 
-      - name: Login via Azure CLI
-        if: github.repository == 'radius-project/radius' && ((startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'))
-        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+      - name: Monitor remote workflow
+        id: monitor-remote-workflow
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
-          client-id: ${{ secrets.BICEPTYPES_CLIENT_ID }}
-          tenant-id: ${{ secrets.BICEPTYPES_TENANT_ID }}
-          subscription-id: ${{ secrets.BICEPTYPES_SUBSCRIPTION_ID }}
+          github-token: ${{ steps.get-token.outputs.token }}
+          script: |
+            const { default: script } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/monitor-remote-workflow.mjs`)
+            await script({context, github, core})
+        env:
+          INPUT_OWNER: azure-octo
+          INPUT_REPO: radius-publisher
+          INPUT_WORKFLOW_FILE: publish-bicep-types.yml
+          INPUT_DISPATCH_STARTED_AT: ${{ steps.dispatch-start.outputs.started_at }}
+          INPUT_MAX_WAIT_SECONDS: "600"
+          INPUT_POLL_INTERVAL_SECONDS: "15"
 
-      - name: Setup and verify bicep CLI
-        if: github.repository == 'radius-project/radius' && ((startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'))
+      - name: Show failed logs
+        if: failure() && steps.monitor-remote-workflow.outputs.run_id != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.get-token.outputs.token }}
         run: |
-          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
-          chmod +x ./bicep
-          sudo mv ./bicep /usr/local/bin/bicep
-          bicep --version
-
-      - name: Publish bicep types
-        if: github.repository == 'radius-project/radius' && ((startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'))
-        run: |
-          bicep publish-extension ./hack/bicep-types-radius/generated/index.json --target br:${{ env.BICEP_TYPES_REGISTRY }}/radius:${{ env.REL_CHANNEL == 'edge' && 'latest' || env.REL_CHANNEL }} --force
+          gh run view "${{ steps.monitor-remote-workflow.outputs.run_id }}" --repo azure-octo/radius-publisher --log-failed || true
 
   publish-release:
     name: Publish GitHub Release
@@ -425,13 +444,12 @@ jobs:
       contents: write # Required for creating releases
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: recursive
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: .python-version
 
@@ -439,7 +457,7 @@ jobs:
         run: python ./.github/scripts/get_release_version.py
 
       - name: Download release artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: rad_cli_*
           merge-multiple: true
@@ -472,3 +490,53 @@ jobs:
             --verify-tag
         env:
           GITHUB_TOKEN: ${{ secrets.GH_RAD_CI_BOT_PAT }}
+
+  # Comprehensive build summary that checks all critical build jobs.
+  # Use this as the required status check in PR branch protection rules.
+  build-summary:
+    if: always()
+    name: Build Summary
+    needs: [build-check, build-and-push-images, build-and-push-bicep-types]
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Check all build jobs
+        run: |
+          results=(
+            "build-check:${BUILD_CHECK_RESULT}"
+            "build-and-push-images:${BUILD_AND_PUSH_IMAGES_RESULT}"
+            "build-and-push-bicep-types:${BUILD_AND_PUSH_BICEP_TYPES_RESULT}"
+          )
+
+          echo "## Build Results Summary" >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| Job | Status |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "|-----|--------|" >> "${GITHUB_STEP_SUMMARY}"
+
+          failed=0
+          for result in "${results[@]}"; do
+            job="${result%%:*}"
+            status="${result##*:}"
+
+            if [ "$status" = "success" ] || [ "$status" = "skipped" ]; then
+              echo "| $job | ✅ $status |" >> "${GITHUB_STEP_SUMMARY}"
+            else
+              echo "| $job | ❌ $status |" >> "${GITHUB_STEP_SUMMARY}"
+              failed=1
+            fi
+          done
+
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ $failed -eq 1 ]; then
+            echo "::error::One or more build jobs failed or were cancelled"
+            echo "**Result: ❌ BUILD FAILED**" >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          else
+            echo "**Result: ✅ ALL BUILDS PASSED**" >> "${GITHUB_STEP_SUMMARY}"
+            echo "All build jobs completed successfully"
+          fi
+        env:
+          BUILD_CHECK_RESULT: ${{ needs.build-check.result }}
+          BUILD_AND_PUSH_IMAGES_RESULT: ${{ needs.build-and-push-images.result }}
+          BUILD_AND_PUSH_BICEP_TYPES_RESULT: ${{ needs.build-and-push-bicep-types.result }}

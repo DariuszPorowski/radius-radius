@@ -3,7 +3,9 @@ package version
 import (
 	"context"
 
+	"github.com/radius-project/radius/pkg/cli"
 	"github.com/radius-project/radius/pkg/cli/bicep"
+	"github.com/radius-project/radius/pkg/cli/cmd/commonflags"
 	"github.com/radius-project/radius/pkg/cli/framework"
 	"github.com/radius-project/radius/pkg/cli/helm"
 	"github.com/radius-project/radius/pkg/cli/output"
@@ -21,6 +23,11 @@ type CLIVersionInfo struct {
 type ControlPlaneVersionInfo struct {
 	Version string `json:"version"`
 	Status  string `json:"status"`
+}
+
+type CombinedVersionInfo struct {
+	CLI          CLIVersionInfo          `json:"cli"`
+	ControlPlane ControlPlaneVersionInfo `json:"controlPlane"`
 }
 
 // getCliVersionInfo returns the CLI version information
@@ -74,6 +81,7 @@ rad version --cli`,
 		RunE: framework.RunCommand(runner),
 	}
 
+	commonflags.AddOutputFlag(cmd)
 	cmd.Flags().Bool("cli", false, "Use this flag to only show the rad CLI version")
 	return cmd, runner
 }
@@ -97,12 +105,9 @@ func NewRunner(factory framework.Factory) *Runner {
 
 // Validate validates the command arguments
 func (r *Runner) Validate(cmd *cobra.Command, args []string) error {
-	format, err := cmd.Flags().GetString("output")
+	format, err := cli.RequireOutput(cmd)
 	if err != nil {
 		return err
-	}
-	if format == "" {
-		format = "table"
 	}
 	r.Format = format
 
@@ -135,23 +140,27 @@ func (r *Runner) writeVersionInfo(format string) error {
 	// Display CLI version information
 	cliVersion := getCliVersionInfo()
 
-	// Only show headers for human-readable formats
-	if format != "json" && format != "yaml" {
-		r.Output.LogInfo("CLI Version Information:")
+	// Get control plane info (handles errors internally)
+	cpInfo := r.getControlPlaneVersionInfo()
+
+	// For JSON format, output a single combined object
+	if format == "json" {
+		combinedInfo := CombinedVersionInfo{
+			CLI:          cliVersion,
+			ControlPlane: cpInfo,
+		}
+		return r.Output.WriteFormatted(format, combinedInfo, output.FormatterOptions{})
 	}
+
+	// For table and other formats, show headers and separate sections
+	r.Output.LogInfo("CLI Version Information:")
 
 	err := r.Output.WriteFormatted(format, cliVersion, getCliVersionFormatterOptions())
 	if err != nil {
 		return err
 	}
 
-	// Get control plane info (handles errors internally)
-	cpInfo := r.getControlPlaneVersionInfo()
-
-	// Only show headers for human-readable formats
-	if format != "json" && format != "yaml" {
-		r.Output.LogInfo("\nControl Plane Information:")
-	}
+	r.Output.LogInfo("\nControl Plane Information:")
 
 	return r.Output.WriteFormatted(format, cpInfo, getControlPlaneFormatterOptions())
 }

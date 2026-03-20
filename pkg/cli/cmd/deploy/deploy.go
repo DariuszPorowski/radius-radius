@@ -34,6 +34,7 @@ import (
 	"github.com/radius-project/radius/pkg/cli/filesystem"
 	"github.com/radius-project/radius/pkg/cli/framework"
 	"github.com/radius-project/radius/pkg/cli/output"
+	"github.com/radius-project/radius/pkg/cli/recipepack"
 	"github.com/radius-project/radius/pkg/cli/workspaces"
 	"github.com/radius-project/radius/pkg/corerp/api/v20231001preview"
 	"github.com/radius-project/radius/pkg/corerp/api/v20250801preview"
@@ -136,15 +137,19 @@ type Runner struct {
 	RadiusCoreClientFactory *v20250801preview.ClientFactory
 	Deploy                  deploy.Interface
 	Output                  output.Interface
+	// DefaultScopeClientFactory is the client factory scoped to the default resource group.
+	// The default recipe pack is always created/queried in the default scope.
+	DefaultScopeClientFactory *v20250801preview.ClientFactory
 
-	ApplicationName     string
-	EnvironmentNameOrID string
-	FilePath            string
-	Parameters          map[string]map[string]any
-	Template            map[string]any
-	Workspace           *workspaces.Workspace
-	Providers           *clients.Providers
-	EnvResult           *EnvironmentCheckResult
+	ApplicationName          string
+	EnvironmentNameOrID      string
+	FilePath                 string
+	Parameters               map[string]map[string]any
+	Template                 map[string]any
+	TemplateInspectionResult bicep.TemplateInspectionResult
+	Workspace                *workspaces.Workspace
+	Providers                *clients.Providers
+	EnvResult                *EnvironmentCheckResult
 }
 
 // NewRunner creates a new instance of the `rad deploy` runner.
@@ -193,12 +198,15 @@ func (r *Runner) Validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Inspect the template resources once to get both environment check and deprecated resources
+	r.TemplateInspectionResult = bicep.InspectTemplateResources(r.Template)
+
 	// Check if environment was explicitly provided via flag or workspace default
 	environmentFlag, _ := cmd.Flags().GetString("environment")
 	environmentProvidedExplicitly := environmentFlag != "" || workspace.Environment != ""
 
 	// Check if the template contains an environment resource
-	templateCreatesEnvironment := bicep.ContainsEnvironmentResource(r.Template)
+	templateCreatesEnvironment := r.TemplateInspectionResult.ContainsEnvironmentResource
 
 	if !templateCreatesEnvironment || environmentProvidedExplicitly {
 		// Environment is required if:
@@ -258,6 +266,18 @@ func (r *Runner) Validate(cmd *cobra.Command, args []string) error {
 func (r *Runner) Run(ctx context.Context) error {
 	// Use the template that was prepared during validation
 	template := r.Template
+
+	// Check for deprecated resource types and warn the user (using the result from Validate)
+	deprecatedResources := r.TemplateInspectionResult.DeprecatedResources
+	if len(deprecatedResources) > 0 {
+		r.Output.LogInfo("")
+		r.Output.LogInfo("WARNING: The following resource types are deprecated:")
+		for _, resourceType := range deprecatedResources {
+			r.Output.LogInfo("  - %s", resourceType)
+		}
+		r.Output.LogInfo("Please migrate to the new Radius.* namespace.")
+		r.Output.LogInfo("")
+	}
 
 	// This is the earliest point where we can inject parameters, we have
 	// to wait until the template is prepared.
@@ -327,6 +347,14 @@ func (r *Runner) Run(ctx context.Context) error {
 		progressText = fmt.Sprintf(
 			"Deploying template '%v' for application '%v' and environment '%v' from workspace '%v'...\n\n"+
 				"Deployment In Progress... ", r.FilePath, r.ApplicationName, r.EnvironmentNameOrID, r.Workspace.Name)
+	}
+
+	// Before deploying, set up recipe packs for any Radius.Core environments in the
+	// template. This creates default recipe pack resource if not found and injects its
+	// ID into the template.
+	err = r.setupRecipePack(ctx, template)
+	if err != nil {
+		return err
 	}
 
 	_, err = r.Deploy.DeployWithProgress(ctx, deploy.Options{
@@ -475,7 +503,7 @@ func (r *Runner) getApplicationsCoreEnvironment(ctx context.Context, id string) 
 }
 
 // getRadiusCoreEnvironment retrieves environment using Radius Core client and returns as Applications.Core format
-func (r *Runner) getRadiusCoreEnvironment(ctx context.Context, id string) (*v20250801preview.EnvironmentResource, error) {
+func (r *Runner) getRadiusCoreEnvironment(ctx context.Context, name string) (*v20250801preview.EnvironmentResource, error) {
 	if r.RadiusCoreClientFactory == nil {
 		clientFactory, err := cmd.InitializeRadiusCoreClientFactory(ctx, r.Workspace, r.Workspace.Scope)
 		if err != nil {
@@ -485,7 +513,7 @@ func (r *Runner) getRadiusCoreEnvironment(ctx context.Context, id string) (*v202
 	}
 
 	environmentClient := r.RadiusCoreClientFactory.NewEnvironmentsClient()
-	env, err := environmentClient.Get(ctx, id, nil)
+	env, err := environmentClient.Get(ctx, name, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -553,14 +581,14 @@ func (r *Runner) FetchEnvironment(ctx context.Context, envNameOrID string) (*Env
 		}
 	}
 	if fetchRadiusCoreEnv {
-		var radCoreEnvID string
-		if !isID {
-			radCoreEnvID = r.constructRadiusCoreEnvironmentID(envNameOrID)
+		var radCoreEnvName string
+		if isID {
+			radCoreEnvName = envID.Name()
 		} else {
-			radCoreEnvID = envNameOrID
+			radCoreEnvName = envNameOrID
 		}
 
-		radiusCoreEnv, err := r.getRadiusCoreEnvironment(ctx, radCoreEnvID)
+		radiusCoreEnv, err := r.getRadiusCoreEnvironment(ctx, radCoreEnvName)
 		if err != nil {
 			if !clients.Is404Error(err) {
 				return nil, err
@@ -622,16 +650,114 @@ func (r *Runner) setupCloudProviders(properties any) {
 		if props != nil && props.Providers != nil {
 			if props.Providers.Aws != nil {
 				r.Providers.AWS = &clients.AWSProvider{
-					Scope: *props.Providers.Aws.Scope,
+					Scope: "/planes/aws/aws/accounts/" + *props.Providers.Aws.AccountID + "/regions/" + *props.Providers.Aws.Region,
 				}
 			}
 			if props.Providers.Azure != nil {
+				scope := "/subscriptions/" + *props.Providers.Azure.SubscriptionID
+				if props.Providers.Azure.ResourceGroupName != nil && *props.Providers.Azure.ResourceGroupName != "" {
+					scope += "/resourceGroups/" + *props.Providers.Azure.ResourceGroupName
+				}
 				r.Providers.Azure = &clients.AzureProvider{
-					Scope: "/planes/azure/azure/" + "Subscriptions/" + *props.Providers.Azure.SubscriptionID + "/ResourceGroups/" + *props.Providers.Azure.ResourceGroupName,
+					Scope: scope,
 				}
 			}
 		}
 	}
+}
+
+// setupRecipePack ensures recipe pack(s) for all Radius.Core/environments resources in the template.
+// If a Radius.Core environment resource has no recipe
+// packs set by the user, Radius creates(if needed) and fetches the default recipe pack from the default scope and
+// injects its ID into the template. If the environment already has any recipe pack
+// IDs set (literal or Bicep expression references), no changes are made.
+func (r *Runner) setupRecipePack(ctx context.Context, template map[string]any) error {
+	envResources := bicep.GetEnvironmentResources(template)
+	if len(envResources) == 0 {
+		return nil
+	}
+
+	for _, envResource := range envResources {
+		if err := r.setupRecipePackForEnvironment(ctx, envResource); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// setupRecipePackForEnvironment sets up recipe packs for a single Radius.Core/environments resource.
+// If the environment already has any recipe packs set (literal IDs or ARM expression references),
+// no changes are made. Otherwise, it fetches or creates the default recipe pack from
+// the default scope and injects its ID into the template.
+func (r *Runner) setupRecipePackForEnvironment(ctx context.Context, envResource map[string]any) error {
+	// The compiled ARM template has a double-nested properties structure:
+	//   envResource["properties"]["properties"] is where resource-level fields live.
+	// Navigate to the inner (resource) properties map.
+	outerProps, ok := envResource["properties"].(map[string]any)
+	if !ok {
+		outerProps = map[string]any{}
+		envResource["properties"] = outerProps
+	}
+
+	properties, ok := outerProps["properties"].(map[string]any)
+	if !ok {
+		properties = map[string]any{}
+		outerProps["properties"] = properties
+	}
+
+	// If the environment already has any recipe packs configured (literal IDs or
+	// Bicep expression references), leave it as-is — the user is managing packs explicitly.
+	if hasAnyRecipePacks(properties) {
+		return nil
+	}
+
+	// No recipe packs set — provide defaults from the default scope.
+	// Ensure the default resource group exists before accessing recipe packs.
+	mgmtClient, err := r.ConnectionFactory.CreateApplicationsManagementClient(ctx, *r.Workspace)
+	if err != nil {
+		return err
+	}
+	if err := recipepack.EnsureDefaultResourceGroup(ctx, mgmtClient.CreateOrUpdateResourceGroup); err != nil {
+		return err
+	}
+
+	// Initialize the default scope client factory so we can access default recipe packs.
+	if r.DefaultScopeClientFactory == nil {
+		defaultFactory, err := cmd.InitializeRadiusCoreClientFactory(ctx, r.Workspace, recipepack.DefaultResourceGroupScope)
+		if err != nil {
+			return err
+		}
+		r.DefaultScopeClientFactory = defaultFactory
+	}
+
+	recipePackDefaultClient := r.DefaultScopeClientFactory.NewRecipePacksClient()
+
+	// Try to GET the default recipe pack from the default scope.
+	// If it doesn't exist, create it.
+	packID, err := recipepack.GetOrCreateDefaultRecipePack(ctx, recipePackDefaultClient)
+	if err != nil {
+		return err
+	}
+
+	// Inject the default recipe pack ID into the template.
+	properties["recipePacks"] = []any{packID}
+
+	return nil
+}
+
+// hasAnyRecipePacks returns true if the environment properties have any recipe packs
+// configured, including both literal string IDs and ARM expression references.
+func hasAnyRecipePacks(properties map[string]any) bool {
+	recipePacks, ok := properties["recipePacks"]
+	if !ok {
+		return false
+	}
+	packsArray, ok := recipePacks.([]any)
+	if !ok {
+		return false
+	}
+	return len(packsArray) > 0
 }
 
 // configureProviders configures environment and cloud providers based on the environment and provider type
